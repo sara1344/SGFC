@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Compilado</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .modal-container {
+            background-color: white;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .modal-body {
+            padding: 25px 20px;
+            line-height: 1.6;
+            color: #495057;
+        }
+        
+        .confirmation-check {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .confirmation-check input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .confirmation-check label {
+            cursor: pointer;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 14px;
+        }
+        
+        .btn-cancel {
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+        
+        .btn-submit {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-submit:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-cancel:hover {
+            background-color: #e9ecef;
+        }
+        
+        .btn-submit:hover:not(:disabled) {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">PDF Compilado</div>
+        </div>
+        <div class="modal-body">
+            Entiendo el procedimiento y hago envío de<br>
+            los documentos solicitados
+            
+            <div class="confirmation-check">
+                <input type="checkbox" id="confirmCheck">
+                <label for="confirmCheck">Confirmo que he revisado los documentos</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="contra.html" class="btn btn-cancel">Cancelar</a>
+            <a href="contra.html" class="btn btn-submit" id="submitBtn" disabled>Finalizar</a>
+        </div>
+    </div>
+
+    <script>
+     
+        const confirmCheck = document.getElementById('confirmCheck');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.querySelector('.btn-cancel');
+        
+   
+        confirmCheck.addEventListener('change', function() {
+            submitBtn.disabled = !this.checked;
+        });
+        
+
+        cancelBtn.addEventListener('click', function() {
+            console.log('Operación cancelada');
+
+        });
+        
+        submitBtn.addEventListener('click', function() {
+            console.log('Documentos enviados');
+
+            alert('Documentos enviados correctamente');
+        });
+    </script>
+</body>
+</html>

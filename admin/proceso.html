@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proceso de Contratistas</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #3498db;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23757575" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+            background-repeat: no-repeat;
+            background-position: 15px center;
+            background-size: 20px;
+            padding-left: 45px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .process-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .process-item {
+            background-color: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contractor-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+
+        }
+
+        .contractor-name {
+            font-weight: 600;
+            font-size: 16px;
+            margin-right: 15px;
+            color: #000000;
+
+        }
+
+
+
+        .contractor-name a:hover {
+            text-decoration: underline;
+            color: #3498db;
+
+        }
+
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            width: 200px;
+        }
+
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+
+        .progress-bar-container {
+            flex-grow: 1;
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-right: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .progress-0 .progress-bar {
+            width: 0%;
+            background-color: #e74c3c;
+        }
+
+        .progress-40 .progress-bar {
+            width: 40%;
+            background-color: #f39c12;
+        }
+
+        .progress-65 .progress-bar {
+            width: 65%;
+            background-color: #f1c40f;
+        }
+
+        .progress-100 .progress-bar {
+            width: 100%;
+            background-color: #2ecc71;
+        }
+
+        .progress-percent {
+            font-weight: bold;
+            min-width: 40px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Proceo</h1>
+
+    <div>
+
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Buscar contratista por nombre...">
+        </div>
+
+        <ul class="process-list">
+            <li class="process-item">
+                <div class="contractor-info">
+                    <a href="contratActua.html" class="contractor-name">Carlos Andres Andica</a>
+                </div>
+                <div class="progress-container progress-65">
+                    <img src="../images/alerta-naranja.png" alt="Alerta naranja" class="status-icon">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <span class="progress-percent">65%</span>
+                </div>
+            </li>
+            <li class="process-item">
+                <div class="contractor-info">
+                    <a href="contratActua.html" class="contractor-name">Nicol Dayana Puerta</a>
+                </div>
+                <div class="progress-container progress-0">
+                    <img src="../images/alerta roja.png" alt="Alerta roja" class="status-icon">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <span class="progress-percent">0%</span>
+                </div>
+            </li>
+            <li class="process-item">
+                <div class="contractor-info">
+                    <a href="contratActua.html" class="contractor-name">Sara Betancur Marquez</a>
+                </div>
+                <div class="progress-container progress-100">
+                    <img src="../images/alerta-verde.png" alt="Alerta verde" class="status-icon">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <span class="progress-percent">100%</span>
+                </div>
+            </li>
+            <li class="process-item">
+                <div class="contractor-info">
+                    <a href="contratActua.html" class="contractor-name">Jose Germán Estrada</a>
+                </div>
+                <div class="progress-container progress-40">
+                    <img src="../images/alerta-naranja.png" alt="Alerta naranja" class="status-icon">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <span class="progress-percent">40%</span>
+                </div>
+            </li>
+            <li class="process-item">
+                <div class="contractor-info">
+                    <a href="contratActua.html" class="contractor-name">Pepito Perez</a>
+                </div>
+                <div class="progress-container progress-100">
+                    <img src="../images/alerta-verde.png" alt="Alerta verde" class="status-icon">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <span class="progress-percent">100%</span>
+                </div>
+            </li>
+            <li class="process-item">
+                <div class="contractor-info">
+                    <a href="contratActua.html" class="contractor-name">Pepita Reyes</a>
+                </div>
+                <div class="progress-container progress-100">
+                    <img src="../images/alerta-verde.png" alt="Alerta verde" class="status-icon">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <span class="progress-percent">100%</span>
+                </div>
+            </li>
+            <li class="process-item">
+                <div class="contractor-info">
+                    <a href="contratActua.html" class="contractor-name">Luceny Amaya</a>
+                </div>
+                <div class="progress-container progress-0">
+                    <img src="../images/alerta roja.png" alt="Alerta roja" class="status-icon">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <span class="progress-percent">0%</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+
+        document.querySelector('.search-input').addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.process-item');
+
+            items.forEach(item => {
+                const name = item.querySelector('.contractor-name').textContent.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

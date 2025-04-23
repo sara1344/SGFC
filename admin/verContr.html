@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo Contratista</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #3498db;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23757575" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+            background-repeat: no-repeat;
+            background-position: 15px center;
+            background-size: 20px;
+            padding-left: 45px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .contractor-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contractor-item {
+            background-color: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contractor-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .contractor-name a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .contractor-name a:hover {
+            text-decoration: underline;
+            color: #3498db;
+        }
+
+        .update-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .update-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .divider {
+            border-top: 2px dashed #ddd;
+            margin: 30px 0;
+        }
+
+        .create-section {
+            text-align: right;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .create-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .create-btn:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Contratista</h1>
+
+    <div class="create-section">
+        <a href="crearContra.html" class="create-btn" style="text-decoration: none;">+ Nuevo Contratista</a>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-input" placeholder="Buscar contratista por nombre...">
+    </div>
+
+    <ul class="contractor-list">
+        <li class="contractor-item">
+            <div class="contractor-name"><a href="histContra.html">Carlos Andres Andica</a></div>
+            <a href="actualizarContra.html" class="update-btn" style="text-decoration: none;">Actualizar contratista</a>
+        </li>
+        <li class="contractor-item">
+            <div class="contractor-name"><a href="histContra.html">Nicol Dayana Puerta</a></div>
+            <a href="actualizarContra.html" class="update-btn" style="text-decoration: none;">Actualizar contratista</a>
+        </li>
+        <li class="contractor-item">
+            <div class="contractor-name"><a href="histContra.html">Sara Betancur Marquez</a></div>
+            <a href="actualizarContra.html" class="update-btn" style="text-decoration: none;">Actualizar contratista</a>
+        </li>
+        <li class="contractor-item">
+            <div class="contractor-name"><a href="histContra.html">Jose Germán Estrada</a></div>
+            <a href="actualizarContra.html" class="update-btn" style="text-decoration: none;">Actualizar contratista</a>
+        </li>
+    </ul>
+
+    <div class="divider"></div>
+
+    <script>
+        document.querySelector('.search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.contractor-item');
+
+            items.forEach(item => {
+                const name = item.querySelector('.contractor-name').textContent.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
