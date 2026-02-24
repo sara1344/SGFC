@@ -1,0 +1,113 @@
+/* Estilos generales */
+body {
+    width: 80;
+    font-family: 'Calibri', 'Candara', 'Segoe UI', 'Optima', 'Arial', sans-serif;
+    background-color: #f4f7f6;
+    background: url(../assets/images/fondoClaro.png) no-repeat center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+}
+
+input,
+button,
+select,
+textarea {
+    font-family: 'Calibri', sans-serif;
+}
+
+.logo-container {
+    grid-column: 1;
+    padding: 0;
+    margin-left: 450px;
+    width: 100%;
+    display: flex;
+}
+.logo-container img {
+    height: 50px;
+    max-width: 180px;
+    padding: 15px;
+}
+
+.login-container {
+    margin-top: 20px;
+    padding: 20px 0 0;
+    background: #38a900a9;
+    border-radius: 0px 30px 0px 30px;
+    border: 1px solid #38a900;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    font-family: 'Calibri', sans-serif;
+}
+
+
+.input-transparente {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid #38a900;
+    font-family: 'Calibri', sans-serif;
+    font-size: 16px;
+    width: 100%;
+    outline: none;
+    transition: border-bottom-color 0.3s;
+}
+
+.login-logo {
+    display: block;
+    height: 50px;
+    max-width: 180px;
+}
+
+.input-group {
+    padding: 8px 20px 0 0;
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: black;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.input-submit {
+    padding: 20px;
+}
+
+.btn-login {
+    width: 45%;
+    padding: 12px;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-login:hover {
+    background-color: #00000074;
+}
+
+.forgot-password {
+    display: flex;
+    font-size: 14px;
+    color: black;
+    text-decoration: none;
+    width: 100%;
+}
