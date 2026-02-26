@@ -13,7 +13,7 @@
     <img src="assets/images/logoSena.png" alt="Logo" class="login-logo">
     </div>
     <div class="login-container">
-        <form action="app/Controllers/LoginController.php" method="POST">
+        <form action="../app/Controllers/LoginController.php" method="POST">
             <div class="input-transparente">
                 <h2>Bienvenido al sistema de gestión financiera y contractual</h2>
             </div>
