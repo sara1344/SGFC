@@ -1,0 +1,47 @@
+/* ==========================================================================
+   SGFC — Estilos responsivos
+   Breakpoints: 768px (tablet), 480px (mobile)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 220px; }
+}
+
+@media (max-width: 768px) {
+  .navbar-menu-btn { display: flex; }
+  .hide-mobile { display: none !important; }
+
+  /* Sidebar como overlay en móvil */
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    transition: left .25s ease;
+  }
+  .sidebar.open { left: 0; }
+
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .grid-4          { grid-template-columns: 1fr 1fr; }
+
+  .section-title   { flex-direction: column; }
+
+  .layout-main > main { padding: 14px; }
+  .card-pad { padding: 14px; }
+  .modal { padding: 20px; }
+
+  .table th, .table td { padding: 9px 10px; font-size: 12px; }
+  .breadcrumb { font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .grid-4 { grid-template-columns: 1fr; }
+  .kpi { padding: 12px 14px; }
+  .kpi-value { font-size: 20px; }
+  .tab { padding: 8px 12px; font-size: 12px; }
+  .btn { padding: 7px 13px; font-size: 12px; }
+}
+
+/* Layout en login (2 paneles → 1 columna en móvil) */
+@media (max-width: 900px) {
+  .login-layout { grid-template-columns: 1fr !important; }
+  .login-panel-left { display: none; }
+}

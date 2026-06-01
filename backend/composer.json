@@ -1,0 +1,20 @@
+{
+    "name": "sena/sgfc",
+    "description": "Sistema de Gestión Financiera y Contractual - SENA",
+    "type": "project",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "require": {
+        "php": ">=8.0",
+        "phpmailer/phpmailer": "6.9",
+        "phpoffice/phpspreadsheet": "^5.7",
+        "phpoffice/phpword": "^1.4"
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}

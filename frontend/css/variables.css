@@ -1,0 +1,73 @@
+/* ==========================================================================
+   SGFC — Tokens visuales (paleta institucional SENA + grises Tailwind-like)
+   Espejo exacto del bloque `const C = {...}` de SGFC.jsx para mantener identidad.
+   ========================================================================== */
+
+:root {
+  /* Verde SENA */
+  --c-verde:        #39A900;
+  --c-verde-dark:   #2D8400;
+  --c-verde-light:  #F0FDF4;
+  --c-verde-alpha:  #39A90018;
+
+  /* Azul institucional */
+  --c-azul:         #00304D;
+  --c-azul-mid:     #004D7A;
+  --c-azul-light:   #EFF6FF;
+
+  /* Morado (Super Admin / configuración) */
+  --c-morado:       #71277A;
+  --c-morado-light: #FAF0FB;
+
+  /* Agua marina (pendiente firma) */
+  --c-agua:         #0891B2;
+  --c-agua-light:   #CFFAFE;
+
+  /* Semáforo */
+  --c-amarillo:       #CA8A04;
+  --c-amarillo-light: #FEF9C3;
+  --c-naranja:        #EA580C;
+  --c-naranja-light:  #FFF7ED;
+  --c-rojo:           #DC2626;
+  --c-rojo-light:     #FEE2E2;
+
+  /* Azul firma */
+  --c-azul-firma:       #1D4ED8;
+  --c-azul-firma-light: #DBEAFE;
+
+  /* Escala de grises */
+  --c-gris0: #F8FAFC;
+  --c-gris1: #F1F5F9;
+  --c-gris2: #E2E8F0;
+  --c-gris3: #CBD5E1;
+  --c-gris4: #94A3B8;
+  --c-gris5: #64748B;
+  --c-gris6: #475569;
+  --c-gris7: #334155;
+  --c-gris8: #1E293B;
+  --c-blanco:#FFFFFF;
+
+  /* Tipografía */
+  --font-sans: 'Work Sans', 'Calibri', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --fs-base: 14px;
+
+  /* Radios y sombras */
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-lg: 12px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-modal: 0 10px 40px rgba(0,0,0,0.18);
+
+  /* Espaciados base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* Sidebar */
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 60px;
+  --navbar-h: 56px;
+}

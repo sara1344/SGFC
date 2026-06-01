@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Presentación SGFC — Sistema de Gestión Financiera y Contractual del SENA">
+  <title>SGFC — Presentación</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Canvas: partículas y líneas dinámicas de fondo -->
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- Marca institucional -->
+  <div class="brand-mark" aria-hidden="true">
+    <div class="brand-mark__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+      </svg>
+    </div>
+    SENA
+  </div>
+
+  <!-- Contador de diapositiva -->
+  <div class="slide-counter" aria-live="polite">
+    <span id="counter-current">01</span> / 04
+  </div>
+
+  <!-- Barra de progreso inferior -->
+  <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1"></div>
+
+  <!-- Presentación principal -->
+  <main class="presentation" role="region" aria-label="Presentación SGFC">
+
+    <div id="slides-track" class="slides-track">
+
+      <!-- ============================================================
+           DIAPOSITIVA 1 — Portada
+           ============================================================ -->
+      <section class="slide slide--cover is-active" data-slide="0" aria-label="Portada">
+        <div class="slide__bg-shapes" aria-hidden="true">
+          <div class="shape shape--1"></div>
+          <div class="shape shape--2"></div>
+          <div class="shape shape--3"></div>
+        </div>
+        <div class="slide__grid" aria-hidden="true"></div>
+
+        <div class="slide__inner cover-layout">
+
+          <!-- Columna izquierda: textos -->
+          <div class="cover-text">
+            <div class="cover-badge animate-item">
+              <span class="cover-badge__dot"></span>
+              Proyecto institucional
+            </div>
+
+            <h1 class="cover-title animate-item">
+              Sistema de Gestión<br>Financiera y Contractual
+            </h1>
+
+            <p class="cover-acronym animate-item" aria-label="Sigla SGFC">SGFC</p>
+
+            <p class="cover-subtitle animate-item">
+              Plataforma web para la gestión documental y contractual de contratistas
+            </p>
+
+            <div class="cover-meta animate-item">
+              <span class="cover-meta__label">Integrantes</span>
+              <div class="cover-meta__names">
+                Carlos Andrés Andica Gómez<br>
+                Nicol Dayana Puerta Puerta<br>
+                Sara Betancur Márquez
+              </div>
+              <div class="cover-meta__ficha">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Ficha 2929061
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna derecha: tarjeta visual del sistema -->
+          <div class="cover-visual animate-item">
+            <div class="digital-card">
+              <div class="digital-card__ring digital-card__ring--1" aria-hidden="true"></div>
+              <div class="digital-card__ring digital-card__ring--2" aria-hidden="true"></div>
+
+              <div class="digital-card__header">
+                <div class="digital-card__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </div>
+                <div class="digital-card__brand">
+                  SGFC
+                  <span>Sistema web institucional</span>
+                </div>
+              </div>
+
+              <div class="digital-card__lines">
+                <div class="digital-card__line digital-card__line--green"></div>
+                <div class="digital-card__line digital-card__line--mid"></div>
+                <div class="digital-card__line digital-card__line--short"></div>
+                <div class="digital-card__line"></div>
+              </div>
+
+              <div class="digital-card__status">
+                <span class="digital-card__status-dot"></span>
+                Plataforma activa
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================
+           DIAPOSITIVA 2 — Problema raíz
+           ============================================================ -->
+      <section class="slide slide--problem" data-slide="1" aria-label="Problema raíz">
+        <div class="slide__bg-shapes" aria-hidden="true">
+          <div class="shape shape--1"></div>
+          <div class="shape shape--2"></div>
+        </div>
+        <div class="slide__grid" aria-hidden="true"></div>
+
+        <div class="slide__inner">
+          <h2 class="slide-heading slide-heading--accent animate-item">Problema raíz</h2>
+
+          <p class="slide-lead animate-item">
+            Actualmente, la gestión de pagos a contratistas es un proceso manual, lento y propenso a errores.
+          </p>
+
+          <p class="slide-secondary animate-item">
+            Los contratistas recopilan, organizan y envían evidencias por diferentes medios, mientras los administrativos revisan documentos sin un sistema centralizado.
+          </p>
+
+          <!-- Flujo desordenado visual -->
+          <div class="chaos-flow animate-item" aria-hidden="true">
+            <div class="chaos-node" style="--rot:-4deg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Correo
+            </div>
+            <span class="chaos-arrow" style="--rot:12deg">↯</span>
+            <div class="chaos-node" style="--rot:3deg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              WhatsApp
+            </div>
+            <span class="chaos-arrow" style="--rot:-8deg">↯</span>
+            <div class="chaos-node" style="--rot:-2deg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              Carpetas
+            </div>
+            <span class="chaos-arrow" style="--rot:6deg">↯</span>
+            <div class="chaos-node" style="--rot:5deg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Revisión
+            </div>
+          </div>
+
+          <!-- Cards de problemas clave -->
+          <div class="cards-grid">
+            <article class="glass-card glass-card--problem card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Retrasos en pagos</h3>
+            </article>
+
+            <article class="glass-card glass-card--problem card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Desorden documental</h3>
+            </article>
+
+            <article class="glass-card glass-card--problem card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Comunicación ineficiente</h3>
+            </article>
+
+            <article class="glass-card glass-card--problem card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Falta de trazabilidad</h3>
+            </article>
+
+            <article class="glass-card glass-card--problem card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Mayor carga administrativa</h3>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           DIAPOSITIVA 3 — Solución e introducción al proyecto
+           ============================================================ -->
+      <section class="slide slide--solution" data-slide="2" aria-label="La solución SGFC">
+        <div class="slide__bg-shapes" aria-hidden="true">
+          <div class="shape shape--1"></div>
+          <div class="shape shape--3"></div>
+        </div>
+        <div class="slide__grid" aria-hidden="true"></div>
+
+        <div class="slide__inner">
+          <h2 class="slide-heading slide-heading--accent animate-item">La solución: SGFC</h2>
+
+          <p class="slide-lead animate-item">
+            SGFC es una plataforma web institucional del SENA diseñada para centralizar y agilizar la recepción, validación, unificación y firma documental de evidencias contractuales de contratistas.
+          </p>
+
+          <!-- Flujo ordenado -->
+          <div class="solution-flow animate-item" aria-label="Flujo del proceso">
+            <div class="flow-step">
+              <div class="flow-step__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <span class="flow-step__label">Contratista</span>
+            </div>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <div class="flow-step flow-step--highlight">
+              <div class="flow-step__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+              </div>
+              <span class="flow-step__label">SGFC</span>
+            </div>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <div class="flow-step">
+              <div class="flow-step__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+              </div>
+              <span class="flow-step__label">Validación<br>administrativa</span>
+            </div>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <div class="flow-step">
+              <div class="flow-step__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <span class="flow-step__label">Aprobación<br>documental</span>
+            </div>
+          </div>
+
+          <!-- Funcionalidades clave -->
+          <div class="cards-grid solution-cards">
+            <article class="glass-card glass-card--solution card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Carga de evidencias</h3>
+            </article>
+
+            <article class="glass-card glass-card--solution card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Unificación de PDF</h3>
+            </article>
+
+            <article class="glass-card glass-card--solution card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Revisión administrativa</h3>
+            </article>
+
+            <article class="glass-card glass-card--solution card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Devolución con observaciones</h3>
+            </article>
+
+            <article class="glass-card glass-card--solution card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Seguimiento del estado</h3>
+            </article>
+
+            <article class="glass-card glass-card--solution card-stagger">
+              <div class="glass-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </div>
+              <h3 class="glass-card__title">Seguridad y trazabilidad</h3>
+            </article>
+          </div>
+
+          <!-- Cierre de impacto -->
+          <div class="closing-statement animate-item">
+            <p>
+              <strong>SGFC</strong> optimiza el proceso contractual, reduce errores y mejora la comunicación entre contratistas y administrativos.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           DIAPOSITIVA 4 — Stack tecnológico
+           ============================================================ -->
+      <section class="slide slide--tech" data-slide="3" aria-label="Stack tecnológico">
+        <div class="slide__bg-shapes" aria-hidden="true">
+          <div class="shape shape--1"></div>
+          <div class="shape shape--2"></div>
+        </div>
+        <div class="slide__grid" aria-hidden="true"></div>
+
+        <div class="slide__inner">
+          <h2 class="slide-heading slide-heading--accent animate-item">Stack tecnológico</h2>
+
+          <p class="slide-secondary animate-item" style="margin-bottom: 0;">
+            Tecnologías utilizadas para construir SGFC — sin frameworks pesados en el frontend.
+          </p>
+
+          <div class="tech-layers">
+
+            <!-- Frontend -->
+            <article class="tech-layer card-stagger">
+              <div class="tech-layer__head">
+                <div class="tech-layer__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                  </svg>
+                </div>
+                <h3 class="tech-layer__title">Frontend</h3>
+              </div>
+              <div class="tech-badges">
+                <span class="tech-badge tech-badge--accent">HTML5</span>
+                <span class="tech-badge tech-badge--accent">CSS3</span>
+                <span class="tech-badge tech-badge--accent">JavaScript ES Modules</span>
+              </div>
+            </article>
+
+            <!-- Backend -->
+            <article class="tech-layer card-stagger">
+              <div class="tech-layer__head">
+                <div class="tech-layer__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+                  </svg>
+                </div>
+                <h3 class="tech-layer__title">Backend</h3>
+              </div>
+              <div class="tech-badges">
+                <span class="tech-badge tech-badge--accent">PHP 8+ MVC</span>
+                <span class="tech-badge">REST API</span>
+                <span class="tech-badge">PDO</span>
+                <span class="tech-badge">Sesiones + bcrypt</span>
+              </div>
+            </article>
+
+            <!-- Base de datos -->
+            <article class="tech-layer card-stagger">
+              <div class="tech-layer__head">
+                <div class="tech-layer__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                </div>
+                <h3 class="tech-layer__title">Base de datos</h3>
+              </div>
+              <div class="tech-badges">
+                <span class="tech-badge tech-badge--accent">MySQL 8</span>
+                <span class="tech-badge">MariaDB 10+</span>
+              </div>
+            </article>
+
+            <!-- Librerías -->
+            <article class="tech-layer card-stagger">
+              <div class="tech-layer__head">
+                <div class="tech-layer__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                </div>
+                <h3 class="tech-layer__title">Librerías &amp; servicios</h3>
+              </div>
+              <div class="tech-badges">
+                <span class="tech-badge tech-badge--accent">FPDF + FPDI</span>
+                <span class="tech-badge">PHPMailer</span>
+                <span class="tech-badge">PhpSpreadsheet</span>
+                <span class="tech-badge">PhpWord</span>
+              </div>
+            </article>
+
+            <!-- Infraestructura -->
+            <article class="tech-layer card-stagger">
+              <div class="tech-layer__head">
+                <div class="tech-layer__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                  </svg>
+                </div>
+                <h3 class="tech-layer__title">Infraestructura</h3>
+              </div>
+              <div class="tech-badges">
+                <span class="tech-badge tech-badge--accent">Apache 2.4</span>
+                <span class="tech-badge">XAMPP / WAMP</span>
+                <span class="tech-badge">Composer PSR-4</span>
+                <span class="tech-badge">.env</span>
+              </div>
+            </article>
+
+          </div>
+
+          <div class="tech-footer animate-item">
+            <span class="tech-badge">reCAPTCHA v2</span>
+            <span class="tech-badge">Canvas (partículas)</span>
+            <span class="tech-badge tech-badge--accent">Vanilla JS — sin React / Vue / Angular</span>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /slides-track -->
+  </main>
+
+  <!-- Controles de navegación -->
+  <nav class="nav-controls" aria-label="Navegación de diapositivas">
+    <button id="btn-prev" class="nav-btn" aria-label="Diapositiva anterior" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+
+    <div class="progress-dots" role="tablist" aria-label="Indicadores de diapositiva">
+      <button class="progress-dot is-active" data-index="0" role="tab" aria-label="Diapositiva 1" aria-selected="true"></button>
+      <button class="progress-dot" data-index="1" role="tab" aria-label="Diapositiva 2" aria-selected="false"></button>
+      <button class="progress-dot" data-index="2" role="tab" aria-label="Diapositiva 3" aria-selected="false"></button>
+      <button class="progress-dot" data-index="3" role="tab" aria-label="Diapositiva 4" aria-selected="false"></button>
+    </div>
+
+    <button id="btn-next" class="nav-btn" aria-label="Diapositiva siguiente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+  </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>

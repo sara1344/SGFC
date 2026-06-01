@@ -1,0 +1,25 @@
+# Variables de entorno (credenciales)
+backend/.env
+
+# Dependencias PHP (ejecutar: composer install en backend/)
+backend/vendor/
+
+# Logs
+backend/storage/logs/*
+!backend/storage/logs/.gitkeep
+
+# Archivos subidos por usuarios
+backend/storage/evidencias/*
+!backend/storage/evidencias/.gitkeep
+backend/storage/pdf_unificados/
+backend/storage/pdf_firmados/
+backend/storage/zip_paquetes/
+backend/storage/zips/
+backend/storage/cookies.txt
+
+# Sistema operativo / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

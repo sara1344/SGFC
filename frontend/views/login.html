@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SGFC — Iniciar sesión | SENA</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <style>
+    body { background: #fff; }
+    .login-layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .login-panel-left {
+      background: linear-gradient(160deg, var(--c-azul) 0%, var(--c-azul-mid) 60%, var(--c-verde) 130%);
+      padding: 40px 48px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-panel-left::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05) 0%, transparent 200px),
+        radial-gradient(circle at 80% 70%, rgba(57,169,0,0.08) 0%, transparent 250px);
+    }
+    .login-panel-left .content { position: relative; z-index: 1; }
+    .login-panel-left h1 {
+      font-size: 28px;
+      font-weight: 900;
+      margin-top: 40px;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+    .login-panel-left p.lead {
+      color: rgba(255,255,255,0.65);
+      margin-top: 14px;
+      line-height: 1.65;
+      font-size: 13px;
+      max-width: 340px;
+    }
+    .login-features { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
+    .login-features .item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.78); }
+    .login-footer { position: relative; z-index: 1; font-size: 11px; color: rgba(255,255,255,0.4); }
+    .login-panel-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+    .login-form { width: 100%; max-width: 400px; }
+    .login-form h2 { font-size: 22px; font-weight: 800; color: var(--c-azul); letter-spacing: -0.3px; }
+    .login-form p.sub { font-size: 13px; color: var(--c-gris5); margin-top: 4px; }
+    .pwd-wrap { position: relative; }
+    .pwd-wrap .toggle-pwd {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--c-gris4); display: flex;
+    }
+    #recaptcha-wrap {
+      background: var(--c-gris0);
+      border: 1px solid var(--c-gris2);
+      border-radius: 8px;
+      padding: 12px 14px;
+      min-height: 78px;
+    }
+    #recaptcha-wrap .recaptcha-hint {
+      font-size: 12px; color: var(--c-gris5); margin-bottom: 10px; font-weight: 600;
+    }
+    .alert {
+      background: var(--c-rojo-light);
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex; gap: 8px; align-items: center;
+      margin-bottom: 16px;
+      font-size: 13px; color: var(--c-rojo); font-weight: 500;
+    }
+    .login-demo-creds {
+      margin-top: 24px;
+      padding: 14px 16px;
+      background: var(--c-gris0);
+      border-radius: 10px;
+      border: 1px solid var(--c-gris2);
+    }
+    .login-demo-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--c-gris5);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .login-demo-temp {
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--c-naranja);
+    }
+    .login-demo-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--c-gris2);
+      cursor: pointer;
+      font-size: 12px;
+      transition: background .15s;
+      border-radius: 6px;
+      margin: 0 -4px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+    .login-demo-row:last-child { border-bottom: none; }
+    .login-demo-row:hover { background: rgba(0, 48, 77, 0.04); }
+    .login-demo-role { font-weight: 700; color: var(--c-azul); white-space: nowrap; }
+    .login-demo-user { color: var(--c-gris5); font-family: monospace; font-size: 11px; text-align: right; }
+  </style>
+</head>
+<body data-view="login">
+  <div class="login-layout">
+
+    <div class="login-panel-left">
+      <div class="content">
+        <div class="sgfc-logo dark">
+          <div class="icon-box">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+            </svg>
+          </div>
+          <div class="sep"></div>
+          <div class="text-block">
+            <div><span class="brand">SGFC</span><span class="tag">SENA</span></div>
+            <div class="subtitle">Sist. Gestión Financiera y Contractual</div>
+          </div>
+        </div>
+        <h1>Sistema de Gestión<br>Financiera y<br>Contractual</h1>
+        <p class="lead" id="login-lead">Plataforma institucional para la gestión, validación y seguimiento documental de contratistas del SENA Regional Caldas.</p>
+        <div class="login-features">
+          <div class="item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#39A900" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Carga centralizada de evidencias por periodo
+          </div>
+          <div class="item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#39A900" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="16 13 11 17.85 8 14.5"/></svg>
+            Validación estructurada por módulos GF y GC
+          </div>
+          <div class="item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#39A900" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            Firma digital de documentos unificados
+          </div>
+          <div class="item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#39A900" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Seguimiento y reportes en tiempo real
+          </div>
+        </div>
+      </div>
+      <div class="login-footer" id="login-footer">SENA Regional Caldas — Centro Industrial y del Desarrollo Tecnológico</div>
+    </div>
+
+    <div class="login-panel-right">
+      <div class="login-form fade-up">
+        <h2>Iniciar sesión</h2>
+        <p class="sub">Ingresa tus credenciales institucionales SENA</p>
+
+        <div id="error-box" class="alert hidden">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="error-msg">Mensaje</span>
+        </div>
+
+        <form id="login-form" autocomplete="off" style="display:flex;flex-direction:column;gap:14px;margin-top:18px;">
+          <div>
+            <label class="label" for="user">Usuario</label>
+            <input type="text" id="user" class="input" placeholder="Ingrese su usuario institucional" autocomplete="username" required spellcheck="false">
+            <div style="font-size:11px;color:var(--c-gris4);margin-top:4px;">El usuario lo genera el sistema (primer letra del nombre + primer letra del apellido + últimos 5 dígitos de la cédula).</div>
+          </div>
+
+          <div>
+            <label class="label" for="pwd">Contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" id="pwd" class="input" placeholder="••••••••" autocomplete="current-password" required>
+              <button type="button" class="toggle-pwd" id="toggle-pwd" aria-label="Mostrar contraseña">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div id="recaptcha-wrap">
+            <div class="recaptcha-hint">Verificación de seguridad</div>
+            <div id="recaptcha-container"></div>
+          </div>
+
+          <button class="btn btn-block btn-lg" id="login-btn" type="submit">
+            <svg id="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span id="btn-label">Ingresar al sistema</span>
+          </button>
+          <div style="text-align:center;">
+            <a href="#" style="font-size:13px;color:var(--c-verde);font-weight:600;">¿Olvidaste tu contraseña?</a>
+          </div>
+        </form>
+
+        <div class="login-demo-creds">
+          <p class="login-demo-title">Accesos de demostración <span class="login-demo-temp">(temporal)</span></p>
+          <div class="login-demo-row" data-user="cs60860" data-pass="10053660860">
+            <span class="login-demo-role">Administrativo de Centro</span>
+            <span class="login-demo-user">cs60860 · 10053660860</span>
+          </div>
+          <div class="login-demo-row" data-user="cb22222" data-pass="cont123">
+            <span class="login-demo-role">Contratista</span>
+            <span class="login-demo-user">cb22222 · cont123</span>
+          </div>
+          <div class="login-demo-row" data-user="sb62870" data-pass="sara123">
+            <span class="login-demo-role">Super Admin</span>
+            <span class="login-demo-user">sb62870 · sara123</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { api } from '../js/api.js';
+    import { setUser, defaultViewForRole } from '../js/auth.js';
+    import { showToast } from '../js/components.js';
+    import { initAccessibility } from '../js/accessibility.js';
+
+    initAccessibility();
+
+    const $err     = document.getElementById('error-box');
+    const $msg     = document.getElementById('error-msg');
+    const $form    = document.getElementById('login-form');
+    const $u       = document.getElementById('user');
+    const $p       = document.getElementById('pwd');
+    const $btn     = document.getElementById('login-btn');
+    const $lbl     = document.getElementById('btn-label');
+    const $capWrap = document.getElementById('recaptcha-wrap');
+
+    let recaptchaWidgetId = null;
+    let recaptchaRequired = false;
+    let securityReady = false;
+
+    function error(msg) {
+      $msg.textContent = msg;
+      $err.classList.remove('hidden');
+    }
+    function clearError() { $err.classList.add('hidden'); }
+
+    function loadRecaptchaScript() {
+      return new Promise((resolve, reject) => {
+        if (window.grecaptcha?.render) {
+          resolve();
+          return;
+        }
+        const cbName = '__sgfcRecaptchaOnload';
+        window[cbName] = () => {
+          resolve();
+          delete window[cbName];
+        };
+        const s = document.createElement('script');
+        s.src = `https://www.google.com/recaptcha/api.js?onload=${cbName}&render=explicit`;
+        s.async = true;
+        s.defer = true;
+        s.onerror = () => reject(new Error('No se pudo cargar reCAPTCHA'));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function initSecurity() {
+      try {
+        const r = await api.get('/auth/recaptcha-config', { silent: true });
+        const cfg = r?.data || {};
+        if (cfg.misconfigured) {
+          error('Configuración reCAPTCHA incompleta: defina RECAPTCHA_SITE_KEY y RECAPTCHA_SECRET_KEY juntas en backend/.env.');
+          return;
+        }
+        recaptchaRequired = !!cfg.required;
+        if (!recaptchaRequired) {
+          $capWrap.style.display = 'none';
+          securityReady = true;
+          return;
+        }
+        $capWrap.style.display = '';
+        if (!cfg.site_key) {
+          error('El servidor exige reCAPTCHA pero falta RECAPTCHA_SITE_KEY en la configuración.');
+          return;
+        }
+        await loadRecaptchaScript();
+        recaptchaWidgetId = grecaptcha.render('recaptcha-container', {
+          sitekey: cfg.site_key,
+          theme: 'light',
+        });
+        securityReady = true;
+      } catch {
+        error('No se pudo cargar la verificación de seguridad. Revise su conexión.');
+      }
+    }
+
+    document.getElementById('toggle-pwd').addEventListener('click', () => {
+      $p.type = $p.type === 'password' ? 'text' : 'password';
+    });
+
+    document.querySelectorAll('.login-demo-row').forEach(row => {
+      row.addEventListener('click', () => {
+        $u.value = row.dataset.user || '';
+        $p.value = row.dataset.pass || '';
+        clearError();
+        $u.focus();
+      });
+    });
+
+    $form.addEventListener('submit', async e => {
+      e.preventDefault();
+      clearError();
+      if (!securityReady) return error('Espere a que cargue la verificación de seguridad.');
+      if (!$u.value.trim() || !$p.value) return error('Usuario y contraseña son obligatorios.');
+
+      let recaptchaToken = '';
+      if (recaptchaRequired) {
+        if (recaptchaWidgetId === null || !window.grecaptcha) {
+          return error('La verificación de seguridad no está disponible.');
+        }
+        recaptchaToken = grecaptcha.getResponse(recaptchaWidgetId);
+        if (!recaptchaToken) return error('Complete la verificación reCAPTCHA.');
+      }
+
+      const body = { usuario: $u.value.trim(), password: $p.value };
+      if (recaptchaRequired && recaptchaToken) body.recaptcha_token = recaptchaToken;
+
+      $btn.disabled = true;
+      $lbl.textContent = 'Autenticando...';
+      try {
+        const res = await api.post('/auth/login', body, { silent: true });
+        setUser(res.data.user);
+        showToast('success', 'Bienvenido', `Hola, ${res.data.user.nombre.split(' ')[0]}`);
+        setTimeout(() => { location.href = defaultViewForRole(res.data.user.rol_label); }, 400);
+      } catch (err) {
+        error(err.message || 'Credenciales incorrectas. Verifique usuario y contraseña.');
+        if (recaptchaWidgetId !== null && window.grecaptcha) {
+          grecaptcha.reset(recaptchaWidgetId);
+        }
+        $btn.disabled = false;
+        $lbl.textContent = 'Ingresar al sistema';
+      }
+    });
+
+    initSecurity();
+
+    (async () => {
+      try {
+        const r = await api.get('/public/institucional', { silent: true });
+        const b = r?.data;
+        if (b?.descripcion_login) document.getElementById('login-lead').textContent = b.descripcion_login;
+        if (b?.pie_pagina) document.getElementById('login-footer').textContent = b.pie_pagina;
+      } catch {}
+    })();
+
+    // Si ya hay sesión activa, redirigir
+    (async () => {
+      try {
+        const r = await api.get('/auth/me', { silent: true });
+        if (r?.data?.user) {
+          location.href = defaultViewForRole(r.data.user.rol_label);
+        }
+      } catch {}
+    })();
+  </script>
+</body>
+</html>

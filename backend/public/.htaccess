@@ -1,0 +1,21 @@
+# SGFC — Punto de entrada del backend
+# Todas las solicitudes a /backend/public/* van al index.php (front controller).
+
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # No tocar archivos / carpetas existentes (assets, etc.)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redirigir TODO al front controller
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Bloquear acceso a archivos sensibles
+<FilesMatch "(^\.|composer\.json|composer\.lock|\.env|\.env\..*|\.htaccess)$">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,27 @@
+# SGFC — Raíz del proyecto
+# Garantiza que al entrar a http://localhost/SGFC/ se cargue el login.
+
+DirectoryIndex index.html
+
+# Bloquear listado de directorios
+Options -Indexes
+
+# Bloquear acceso a archivos sensibles
+<FilesMatch "^(\.env|\.env\.example|composer\.json|composer\.lock|README\.md|sgfc\.sql)$">
+  Require all denied
+</FilesMatch>
+
+# Bloquear acceso directo a las carpetas internas que no deben servirse al navegador
+RedirectMatch 403 ^/SGFC/_source_files/.*$
+RedirectMatch 403 ^/SGFC/backend/database/.*$
+RedirectMatch 403 ^/SGFC/backend/storage/.*$
+RedirectMatch 403 ^/SGFC/backend/app/.*$
+RedirectMatch 403 ^/SGFC/backend/routes/.*$
+RedirectMatch 403 ^/SGFC/backend/vendor/.*$
+
+# Headers de seguridad básicos
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "no-referrer-when-downgrade"
+</IfModule>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=./frontend/views/login.html">
+  <link rel="canonical" href="./frontend/views/login.html">
+  <title>SGFC — SENA</title>
+  <style>
+    html,body { margin:0; height:100%; background:#00304D; color:#fff; font-family:'Segoe UI', system-ui, sans-serif; }
+    .box { height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+    .spinner { width:38px; height:38px; border:3px solid rgba(255,255,255,0.2); border-top-color:#39A900; border-radius:50%; animation:s 0.9s linear infinite; }
+    @keyframes s { to { transform:rotate(360deg); } }
+    a { color:#39A900; text-decoration:none; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner"></div>
+    <div>Redirigiendo a <a href="./frontend/views/login.html">SGFC — Login</a>…</div>
+  </div>
+  <script>location.replace('./frontend/views/login.html');</script>
+</body>
+</html>
