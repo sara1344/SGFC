@@ -271,17 +271,20 @@ input, select, textarea { font-family: var(--font-sans); }
   overflow: hidden;
 }
 
-.profile-btn {
+.navbar-logout-btn {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  padding: 5px 9px;
+  padding: 6px 12px;
   border-radius: 8px;
   background: none;
   border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-rojo);
 }
-.profile-btn:hover { background: var(--c-gris1); }
+.navbar-logout-btn:hover { background: var(--c-rojo-light); }
 
 /* ==========================================================================
    COMPONENTES: Card, Button, Input, Badge, Avatar
@@ -892,6 +895,11 @@ textarea.input { resize: vertical; min-height: 80px; }
   display: flex;
   gap: 12px;
   align-items: center;
+  min-width: 0;
+}
+.kpi-body {
+  min-width: 0;
+  flex: 1;
 }
 .kpi-icon {
   width: 44px;
@@ -905,6 +913,14 @@ textarea.input { resize: vertical; min-height: 80px; }
 .kpi-value { font-size: 24px; font-weight: 800; color: var(--c-gris8); line-height: 1; }
 .kpi-label { font-size: 12px; color: var(--c-gris5); margin-top: 3px; font-weight: 500; }
 .kpi-sub   { font-size: 11px; margin-top: 2px; font-weight: 600; }
+.kpi--wide { grid-column: span 2; align-items: flex-start; }
+.kpi--text .kpi-value {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.2px;
+  overflow-wrap: anywhere;
+}
 
 /* Section titles */
 .section-title {
@@ -918,6 +934,13 @@ textarea.input { resize: vertical; min-height: 80px; }
 .section-title h2 { font-size: 20px; font-weight: 800; color: var(--c-azul); letter-spacing: -0.3px; }
 .section-title p  { font-size: 13px; color: var(--c-gris5); margin-top: 3px; }
 .section-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.checklist-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 /* Grids comunes */
 .grid { display: grid; gap: 12px; }

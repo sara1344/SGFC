@@ -86,7 +86,6 @@ function renderKpis() {
       renderKpi({ label: 'Contratistas del centro', value: total, iconName: 'users',     color: '#00304D' }),
       renderKpi({ label: 'Activos',                 value: users.filter(u => parseInt(u.activo, 10) === 1).length, iconName: 'briefcase', color: '#39A900' }),
       renderKpi({ label: 'Con contrato activo',     value: users.filter(u => u.contrato_activo).length, iconName: 'fileText',  color: '#71277A' }),
-      renderKpi({ label: 'Centro',                  value: me?.centro_nombre || '—', iconName: 'building',  color: '#0891B2', sub: me?.regional_nombre || '' }),
     ].join('');
     return;
   }

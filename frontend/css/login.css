@@ -1,0 +1,234 @@
+/* ==========================================================================
+   SGFC — Vista de inicio de sesión
+   ========================================================================== */
+
+body[data-view="login"] {
+  background: #fff;
+}
+
+.login-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.login-panel-left {
+  background: url('../images/login.png') center center / cover no-repeat;
+  padding: 30px 38px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-panel-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 95% 85% at 0% 0%,
+      #002f4d99 0%,
+      #024a76c3 48%,
+      transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-panel-left .content {
+  position: relative;
+  z-index: 1;
+}
+
+.login-panel-left h1 {
+  font-size: 28px;
+  font-weight: 900;
+  margin-top: 40px;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+
+.login-panel-left p.lead {
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 14px;
+  line-height: 1.65;
+  font-size: 13px;
+  max-width: 340px;
+}
+
+.login-footer {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.login-panel-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bubbles-canvas {
+  position: absolute;
+  width: min(52vw, 440px);
+  height: min(58vh, 400px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-bubbles-canvas--br {
+  right: 0;
+  bottom: 0;
+}
+
+.login-form {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-form h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--c-azul);
+  letter-spacing: -0.3px;
+}
+
+.login-form p.sub {
+  font-size: 13px;
+  color: var(--c-gris5);
+  margin-top: 4px;
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.login-user-hint {
+  font-size: 11px;
+  color: var(--c-gris4);
+  margin-top: 4px;
+}
+
+.pwd-wrap {
+  position: relative;
+}
+
+.pwd-wrap .toggle-pwd {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--c-gris4);
+  display: flex;
+}
+
+#recaptcha-wrap {
+  background: var(--c-gris0);
+  border: 1px solid var(--c-gris2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-height: 78px;
+}
+
+#recaptcha-wrap .recaptcha-hint {
+  font-size: 12px;
+  color: var(--c-gris5);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+body[data-view="login"] .alert {
+  background: var(--c-rojo-light);
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--c-rojo);
+  font-weight: 500;
+}
+
+.login-forgot-wrap {
+  text-align: center;
+}
+
+.login-forgot-link {
+  font-size: 13px;
+  color: var(--c-verde);
+  font-weight: 600;
+}
+
+.login-demo-creds {
+  margin-top: 24px;
+  padding: 14px 16px;
+  background: var(--c-gris0);
+  border-radius: 10px;
+  border: 1px solid var(--c-gris2);
+}
+
+.login-demo-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-gris5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.login-demo-temp {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--c-naranja);
+}
+
+.login-demo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--c-gris2);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s;
+  border-radius: 6px;
+  margin: 0 -4px;
+}
+
+.login-demo-row:last-child {
+  border-bottom: none;
+}
+
+.login-demo-row:hover {
+  background: rgba(0, 48, 77, 0.04);
+}
+
+.login-demo-role {
+  font-weight: 700;
+  color: var(--c-azul);
+  white-space: nowrap;
+}
+
+.login-demo-user {
+  color: var(--c-gris5);
+  font-family: monospace;
+  font-size: 11px;
+  text-align: right;
+}

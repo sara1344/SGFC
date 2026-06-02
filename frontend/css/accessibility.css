@@ -55,7 +55,15 @@ html[data-rest-mode="on"] .sidebar {
 }
 
 html[data-rest-mode="on"] .login-panel-left {
-  background: linear-gradient(160deg, #2F3835 0%, #3E4A45 55%, #4A6B30 130%);
+  background: url('../images/login-calido.png') center center / cover no-repeat;
+}
+
+html[data-rest-mode="on"] .login-panel-left::before {
+  background:
+    radial-gradient(ellipse 95% 85% at 0% 0%,
+      #d4c9bccf 0%,
+      #a89888bd 48%,
+      transparent 68%);
 }
 
 html[data-rest-mode="on"] .loader-screen {

@@ -5,7 +5,7 @@
  *  - Inyectan HTML en root y enganchan listeners.
  */
 
-import { $, $$, el, escapeHtml, renderAvatar, fmtDateTime } from './utils.js';
+import { $, $$, el, escapeHtml, renderAvatar } from './utils.js';
 import { getUser, logout, defaultViewForRole } from './auth.js';
 import { resolveFrontendPath, api } from './api.js';
 
@@ -32,7 +32,7 @@ export function renderLogo({ dark = false, compact = false } = {}) {
    ========================================================================== */
 const MENUS = {
   'Administrativo de Centro': [
-    { id: 'admin-dashboard',      label: 'Dashboard',           icon: 'layout',    href: 'administrativo-dashboard.html' },
+    { id: 'admin-dashboard',      label: 'Inicio',              icon: 'home',      href: 'administrativo-dashboard.html' },
     { id: 'admin-usuarios',       label: 'Usuarios',            icon: 'users',     href: 'administrativo-usuarios.html' },
     { id: 'admin-evidencias',     label: 'Tipos de Evidencias', icon: 'folder',    href: 'administrativo-evidencias.html' },
     { id: 'admin-contratos',      label: 'Contratos y Periodos',icon: 'fileText',  href: 'administrativo-contratos-periodos.html' },
@@ -47,7 +47,7 @@ const MENUS = {
     { id: 'cont-notificaciones',  label: 'Notificaciones',      icon: 'bell',           href: 'contratista-notificaciones.html' },
   ],
   'Super Admin': [
-    { id: 'super-dashboard',      label: 'Dashboard',           icon: 'layout',     href: 'superadmin-dashboard.html' },
+    { id: 'super-dashboard',      label: 'Inicio',              icon: 'home',       href: 'superadmin-dashboard.html' },
     { id: 'super-usuarios',       label: 'Usuarios',            icon: 'users',      href: 'superadmin-usuarios.html' },
     { id: 'super-contratos',      label: 'Contratos',           icon: 'fileText',   href: 'superadmin-contratos.html' },
     { id: 'super-evidencias',     label: 'Evidencias',          icon: 'clipboard',  href: 'superadmin-evidencias.html' },
@@ -58,6 +58,7 @@ const MENUS = {
 /* SVG icons inline (subset de lucide-react usado en SGFC.jsx) */
 const ICONS = {
   layout: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
   users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
   folder: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
   fileText: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
@@ -194,17 +195,9 @@ export async function renderLayout({ rootSelector, activeId, breadcrumb = [] }) 
               <span class="crumb ${i === breadcrumb.length - 1 ? 'active' : ''}">${escapeHtml(c)}</span>
             `).join('')}
           </div>
-          <button class="navbar-icon-btn" id="nb-notifs" title="Notificaciones">
-            ${icon('bell', { size: 18 })}
-            ${unread ? '<span class="dot"></span>' : ''}
-          </button>
-          <button class="profile-btn" id="nb-profile">
-            ${renderAvatar(user.nombre, 30)}
-            <div class="hide-mobile" style="text-align:left;">
-              <div style="font-size:12px;font-weight:600;color:var(--c-gris8);">${escapeHtml(user.nombre.split(' ')[0])}</div>
-              <div style="font-size:10px;color:var(--c-gris5);">${escapeHtml(user.rol_label)}</div>
-            </div>
-            ${icon('chevronDown', { size: 13 })}
+          <button class="navbar-logout-btn" id="nb-logout" type="button" title="Cerrar sesión">
+            ${icon('logOut', { size: 16, color: 'var(--c-rojo)' })}
+            <span>Cerrar sesión</span>
           </button>
         </header>
         <main id="view-content"><div class="loader-screen"><div class="loader"></div></div></main>
@@ -231,106 +224,9 @@ export async function renderLayout({ rootSelector, activeId, breadcrumb = [] }) 
     aside.classList.remove('open');
     overlay.classList.remove('open');
   });
-  $('#nb-profile')?.addEventListener('click', e => {
-    e.stopPropagation();
-    showProfileDropdown(e.currentTarget);
-  });
-  $('#nb-notifs')?.addEventListener('click', e => {
-    e.stopPropagation();
-    showNotifDropdown(e.currentTarget);
-  });
+  $('#nb-logout')?.addEventListener('click', () => logout());
 
   return $('#view-content');
-}
-
-/* Dropdown perfil */
-function showProfileDropdown(anchor) {
-  const existing = $('#profile-dd'); if (existing) { existing.remove(); return; }
-  const user = getUser();
-  const dd = el('div', { class: 'dropdown', id: 'profile-dd', style: { width: '210px' } });
-  dd.innerHTML = `
-    <div style="padding:13px 15px;border-bottom:1px solid var(--c-gris1);">
-      <div style="font-size:13px;font-weight:700;color:var(--c-gris8);">${escapeHtml(user.nombre)}</div>
-      <div style="font-size:11px;color:var(--c-gris5);margin-top:1px;">${escapeHtml(user.correo)}</div>
-    </div>
-    <button class="dd-item" data-act="logout" style="width:100%;padding:10px 15px;background:none;border:none;font-size:13px;font-weight:600;color:var(--c-rojo);text-align:left;display:flex;gap:9px;align-items:center;border-top:1px solid var(--c-gris1);">
-      ${icon('logOut', { size: 14, color: 'var(--c-rojo)' })}Cerrar sesión
-    </button>`;
-  positionDropdown(dd, anchor);
-  document.body.appendChild(dd);
-  dd.addEventListener('click', e => {
-    const act = e.target.closest('[data-act]')?.dataset.act;
-    if (act === 'logout') logout();
-    dd.remove();
-  });
-  setTimeout(() => document.addEventListener('click', () => dd.remove(), { once: true }), 0);
-}
-
-function renderNotifDropdownItem(n) {
-  const grouped = n.tipo === 'Actualización contratista' || n.id_contratista;
-  const isAlert = n.tipo === 'Rechazada' || n.tipo === 'Periodo por vencer';
-  const title = grouped
-    ? `${n.contratista_nombre || String(n.titulo).replace(' realizó actualizaciones', '')} realizó actualizaciones`
-    : n.titulo;
-  const link = grouped
-    ? `/views/administrativo-notificaciones.html?id=${n.id_notificacion}`
-    : (n.link || '');
-  const dotColor = isAlert ? '#e53935' : (n.leida == 0 ? 'var(--c-verde)' : 'var(--c-gris3)');
-  const bgColor = n.leida == 0 ? (isAlert ? 'rgba(229,57,53,0.07)' : 'var(--c-verde-light)') : '#fff';
-  const titleColor = isAlert ? '#c62828' : 'inherit';
-  return `<div style="padding:11px 16px;border-bottom:1px solid var(--c-gris1);display:flex;gap:10px;background:${bgColor};cursor:pointer;" data-link="${link}">
-    <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};margin-top:4px;flex-shrink:0;"></div>
-    <div style="flex:1;">
-      <div style="font-size:12px;font-weight:600;color:${titleColor};">${escapeHtml(title)}</div>
-      <div style="font-size:11px;color:var(--c-gris5);">${escapeHtml(n.mensaje || '')}${grouped && n.cantidad_detalles ? ` · ${n.cantidad_detalles} ítems` : ''}</div>
-      <div style="font-size:10px;color:var(--c-gris4);margin-top:1px;">${fmtDateTime(n.fecha_creacion)}</div>
-    </div>
-  </div>`;
-}
-
-async function showNotifDropdown(anchor) {
-  const existing = $('#notif-dd'); if (existing) { existing.remove(); return; }
-  const dd = el('div', { class: 'dropdown', id: 'notif-dd', style: { width: '330px', maxHeight: '420px' } });
-  dd.innerHTML = `<div style="padding:14px;text-align:center;color:var(--c-gris5);font-size:12px;">Cargando…</div>`;
-  positionDropdown(dd, anchor);
-  document.body.appendChild(dd);
-  try {
-    const r = await api.get('/notifications', { silent: true });
-    const items = r.data.items || [];
-    dd.innerHTML = `
-      <div style="padding:12px 16px;border-bottom:1px solid var(--c-gris1);display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-weight:700;font-size:14px;color:var(--c-azul);">Notificaciones</span>
-        <span data-act="all-read" style="font-size:11px;color:var(--c-verde);font-weight:600;cursor:pointer;">Marcar leídas</span>
-      </div>
-      <div style="max-height:330px;overflow-y:auto;">
-        ${items.length === 0
-          ? `<div style="padding:24px;text-align:center;color:var(--c-gris4);font-size:13px;">Sin notificaciones</div>`
-          : items.slice(0, 8).map(renderNotifDropdownItem).join('')}
-      </div>`;
-    dd.addEventListener('click', async e => {
-      if (e.target.closest('[data-act="all-read"]')) {
-        await api.put('/notifications/read-all', {}, { silent: true });
-        location.reload();
-      }
-      const link = e.target.closest('[data-link]')?.dataset.link;
-      if (link) {
-        location.href = resolveFrontendPath(link);
-      }
-    });
-  } catch {
-    dd.innerHTML = `<div style="padding:14px;color:var(--c-rojo);font-size:12px;">Error al cargar notificaciones.</div>`;
-  }
-  setTimeout(() => document.addEventListener('click', () => dd.remove(), { once: true }), 0);
-}
-
-function positionDropdown(dd, anchor) {
-  const r = anchor.getBoundingClientRect();
-  Object.assign(dd.style, {
-    position: 'absolute',
-    top: `${r.bottom + 6 + window.scrollY}px`,
-    right: `${document.documentElement.clientWidth - r.right}px`,
-    zIndex: 200,
-  });
 }
 
 /* ==========================================================================
@@ -444,14 +340,15 @@ export function openModal({ title, html, width = 520, onOpen, onClose }) {
 /* ==========================================================================
    KPI
    ========================================================================== */
-export function renderKpi({ label, value, iconName, color, sub }) {
+export function renderKpi({ label, value, iconName, color, sub, wide = false, textValue = false }) {
+  const valueHtml = textValue ? escapeHtml(String(value)) : value;
   return `
-    <div class="kpi">
+    <div class="kpi${wide ? ' kpi--wide' : ''}${textValue ? ' kpi--text' : ''}">
       <div class="kpi-icon" style="background:${color}15;">
         ${icon(iconName, { size: 20, color, strokeWidth: 2 })}
       </div>
-      <div>
-        <div class="kpi-value">${value}</div>
+      <div class="kpi-body">
+        <div class="kpi-value">${valueHtml}</div>
         <div class="kpi-label">${escapeHtml(label)}</div>
         ${sub ? `<div class="kpi-sub" style="color:${color};">${escapeHtml(sub)}</div>` : ''}
       </div>

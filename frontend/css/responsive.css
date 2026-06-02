@@ -32,10 +32,15 @@
   .breadcrumb { font-size: 12px; }
 }
 
+@media (max-width: 768px) {
+  .grid-kpis .kpi--wide { grid-column: span 1; }
+}
+
 @media (max-width: 480px) {
   .grid-4 { grid-template-columns: 1fr; }
   .kpi { padding: 12px 14px; }
   .kpi-value { font-size: 20px; }
+  .kpi--text .kpi-value { font-size: 14px; line-height: 1.4; }
   .tab { padding: 8px 12px; font-size: 12px; }
   .btn { padding: 7px 13px; font-size: 12px; }
 }
@@ -44,4 +49,8 @@
 @media (max-width: 900px) {
   .login-layout { grid-template-columns: 1fr !important; }
   .login-panel-left { display: none; }
+  .login-bubbles-canvas {
+    width: min(75vw, 320px);
+    height: min(40vh, 240px);
+  }
 }

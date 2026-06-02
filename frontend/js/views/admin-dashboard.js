@@ -8,10 +8,11 @@
 import { api, API_BASE } from '../api.js';
 import { $, escapeHtml, renderAvatar } from '../utils.js';
 import { renderLayout, renderKpi, renderSectionTitle, icon, showToast } from '../components.js';
+import { getUser } from '../auth.js';
 import { fetchAvanceRegionales, renderAvanceRegionalesWidget, bindAvanceRegionalesWidget } from '../dashboard-avance-regionales.js';
 
 export async function init() {
-  const root = await renderLayout({ rootSelector: '#app', activeId: 'admin-dashboard', breadcrumb: ['Dashboard'] });
+  const root = await renderLayout({ rootSelector: '#app', activeId: 'admin-dashboard', breadcrumb: ['Inicio'] });
 
   let data;
   let avanceRegionales = [];
@@ -23,7 +24,7 @@ export async function init() {
     data = rAdmin.data;
     avanceRegionales = rAvance;
   } catch (e) {
-    root.innerHTML = `<div class="card card-pad"><p class="text-rojo">No se pudo cargar el dashboard.</p></div>`;
+    root.innerHTML = `<div class="card card-pad"><p class="text-rojo">No se pudo cargar el inicio.</p></div>`;
     return;
   }
 
@@ -44,21 +45,27 @@ export async function init() {
 
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const ahora = new Date();
+  const me = getUser();
+  const centroKpi = me?.rol_label === 'Administrativo de Centro'
+    ? renderKpi({
+        label: 'Centro',
+        value: me?.centro_nombre || '—',
+        iconName: 'building',
+        color: '#0891B2',
+        sub: me?.regional_nombre || '',
+        wide: true,
+        textValue: true,
+      })
+    : '';
 
   root.innerHTML = `
     ${renderSectionTitle({
-      title: 'Dashboard',
+      title: 'Inicio',
       subtitle: `Seguimiento general — ${meses[ahora.getMonth()]} ${ahora.getFullYear()}`,
-      rightHtml: `
-        <select class="input" id="f-periodo" style="width:170px;">
-          <option value="">Todos los periodos</option>
-          ${periodos.map(p => `<option>${escapeHtml(p)}</option>`).join('')}
-        </select>
-        <button class="btn btn-ghost" id="btn-export">${icon('download', { size: 14 })}Exportar Excel</button>
-      `,
     })}
 
     <div class="grid grid-kpis mb-4">
+      ${centroKpi}
       ${renderKpi({ label: 'Contratistas activos',  value: k.contratistas_activos || 0, iconName: 'users',         color: '#00304D' })}
       ${renderKpi({ label: 'Evidencias aprobadas',  value: k.aprobadas || 0,            iconName: 'checkCircle',   color: '#39A900' })}
       ${renderKpi({ label: 'Pendiente revisión',    value: k.pendiente_revision || 0,   iconName: 'helpCircle',    color: '#CA8A04' })}
@@ -69,6 +76,14 @@ export async function init() {
     </div>
 
     ${renderAvanceRegionalesWidget(avanceRegionales)}
+
+    <div class="checklist-toolbar mb-3">
+      <select class="input" id="f-periodo" style="width:170px;">
+        <option value="">Todos los periodos</option>
+        ${periodos.map(p => `<option>${escapeHtml(p)}</option>`).join('')}
+      </select>
+      <button class="btn btn-ghost" id="btn-export">${icon('download', { size: 14 })}Exportar Excel</button>
+    </div>
 
     <div class="card mb-4" style="overflow:hidden;">
       <div style="padding:14px 18px;border-bottom:1px solid var(--c-gris2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">

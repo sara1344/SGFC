@@ -45,7 +45,7 @@ async function fetchActivityLogs(filters) {
 }
 
 export async function init() {
-  const root = await renderLayout({ rootSelector: '#app', activeId: 'super-dashboard', breadcrumb: ['Dashboard'] });
+  const root = await renderLayout({ rootSelector: '#app', activeId: 'super-dashboard', breadcrumb: ['Inicio'] });
   const [r, avanceRegionales, initialLogs] = await Promise.all([
     api.get('/dashboard/superadmin'),
     fetchAvanceRegionales().catch(() => []),
