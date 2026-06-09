@@ -16,13 +16,13 @@ final class InstitutionalConfigService
     {
         return [
             'nombre_regional'  => 'Regional Caldas',
-            'nombre_centro'    => 'Centro Industrial y del Desarrollo Tecnológico',
+            'nombre_centro'    => 'Centro de Procesos Industriales',
             'codigo_sena'      => '',
             'correo_contacto'  => '',
             'telefono'         => '',
             'direccion'        => '',
             'id_regional'      => 7,
-            'id_centro'        => null,
+            'id_centro'        => 36,
         ];
     }
 

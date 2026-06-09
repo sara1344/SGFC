@@ -13,11 +13,11 @@ INSERT INTO `configuracion_sistema` (`grupo`, `datos`) VALUES
   'email_contractor_rechazo', true,
   'email_contractor_aprobacion', false,
   'email_resumen_diario', false,
-  'smtp_host', '',
+  'smtp_host', 'smtp.gmail.com',
   'smtp_port', 587,
   'smtp_encryption', 'tls',
-  'smtp_user', '',
-  'smtp_from_email', '',
+  'smtp_user', 'sgfcsena@gmail.com',
+  'smtp_from_email', 'sgfcsena@gmail.com',
   'smtp_from_name', 'SGFC — SENA'
 ))
 ON DUPLICATE KEY UPDATE `grupo` = `grupo`;

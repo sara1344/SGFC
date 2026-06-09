@@ -84,6 +84,40 @@ final class MailService
 
 
 
+    /** Correo transaccional (recuperación de contraseña); no exige notificaciones habilitadas. */
+
+    /** @return array{ok:bool,message:string} */
+
+    public static function sendTransactional(string $to, string $subject, string $body): array
+
+    {
+
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+
+            return ['ok' => false, 'message' => 'Correo destino inválido.'];
+
+        }
+
+        if (!NotificationConfigService::smtpReady()) {
+
+            return ['ok' => false, 'message' => 'SMTP no configurado.'];
+
+        }
+
+        $result = self::deliver($to, $subject, $body);
+
+        if (!$result['ok']) {
+
+            App::logError('MAIL_TRANSACTIONAL_FAILED', "to={$to} subject={$subject} error={$result['message']}");
+
+        }
+
+        return $result;
+
+    }
+
+
+
     /** @return array{ok:bool,message:string} */
 
     private static function deliver(string $to, string $subject, string $body): array
@@ -126,13 +160,13 @@ final class MailService
 
         } catch (MailException $e) {
 
-            $detail = trim($mail->ErrorInfo ?: $e->getMessage());
+            $detail = self::mailErrorDetail($mail, $e);
 
             return [
 
                 'ok'      => false,
 
-                'message' => self::friendlyError($detail),
+                'message' => self::friendlyError($detail, $cfg),
 
             ];
 
@@ -192,28 +226,52 @@ final class MailService
 
 
 
-    private static function friendlyError(string $detail): string
-
+    private static function mailErrorDetail(PHPMailer $mail, MailException $e): string
     {
+        $parts = array_filter([
+            trim($mail->ErrorInfo ?: ''),
+            trim($e->getMessage()),
+            trim((string) ($mail->getSMTPInstance()?->getLastReply() ?? '')),
+        ]);
+        return implode(' ', $parts);
+    }
 
+    /** @param array<string,mixed> $cfg */
+    private static function friendlyError(string $detail, array $cfg = []): string
+    {
         $lower = mb_strtolower($detail);
+        $host = mb_strtolower((string) ($cfg['smtp_host'] ?? ''));
+        $isGmail = str_contains($host, 'gmail');
 
 
 
-        if (str_contains($detail, '5.7.139') || str_contains($lower, 'user credentials were incorrect')) {
-
-            return 'Usuario o contraseña incorrectos. Verifique que puede entrar en office.com con ese correo. '
-
-                . 'Si tiene verificación en dos pasos, cree una contraseña de aplicación en Microsoft y úsela en SMTP_PASSWORD (backend/.env).';
-
+        if (
+            str_contains($lower, 'smtpclientauthentication is disabled')
+            || str_contains($detail, 'smtp_auth_disabled')
+        ) {
+            return 'Microsoft deshabilitó el envío SMTP en esta cuenta. Active SMTP AUTH en el buzón '
+                . 'o use otro correo remitente (p. ej. Gmail). Más información: https://aka.ms/smtp_auth_disabled';
         }
 
+        if (
+            $isGmail
+            || str_contains($lower, 'username and password not accepted')
+            || str_contains($lower, 'badcredentials')
+            || str_contains($lower, 'application-specific password')
+            || str_contains($detail, '534-5.7.9')
+        ) {
+            return 'Gmail no acepta la contraseña normal de la cuenta para SMTP. '
+                . 'Cree una contraseña de aplicación en https://myaccount.google.com/apppasswords '
+                . '(verificación en 2 pasos activa) y póngala en SMTP_PASSWORD en backend/.env.';
+        }
 
+        if (str_contains($detail, '5.7.139') || str_contains($lower, 'user credentials were incorrect')) {
+            return 'Usuario o contraseña SMTP incorrectos. Si tiene verificación en dos pasos en Microsoft, '
+                . 'cree una contraseña de aplicación y configúrela en SMTP_PASSWORD (backend/.env).';
+        }
 
-        if (str_contains($detail, '5.7.57') || str_contains($lower, 'smtpclientauthentication is disabled')) {
-
-            return 'Office 365 bloqueó SMTP para esta cuenta. Solicite al área TI del SENA habilitar SMTP AUTH o use otro correo remitente.';
-
+        if (str_contains($detail, '5.7.57')) {
+            return 'Office 365 bloqueó SMTP para esta cuenta. Solicite al área TI habilitar SMTP AUTH o use otro correo remitente.';
         }
 
 
@@ -228,7 +286,7 @@ final class MailService
 
         if (str_contains($lower, 'connect') || str_contains($lower, 'could not connect')) {
 
-            return 'No se pudo conectar al servidor SMTP. Revise host (smtp.office365.com), puerto 587 y conexión a internet.';
+            return 'No se pudo conectar al servidor SMTP. Revise host (smtp.gmail.com), puerto 587 y conexión a internet.';
 
         }
 

@@ -20,6 +20,12 @@ final class ReviewController extends Controller
         $idCentro = PermissionService::isCenterAdmin($user)
             ? PermissionService::requireCentroId($user)
             : null;
+
+        if (!empty($_GET['counts'])) {
+            $this->success((new EvidenceUpload())->revisionTabCounts($idCentro));
+            return;
+        }
+
         $estado = $_GET['estado'] ?? 'Pendiente revisión';
         $rows = (new EvidenceUpload())->listByEstado(
             $estado,

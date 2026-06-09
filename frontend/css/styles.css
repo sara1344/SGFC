@@ -6,6 +6,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800;900&display=swap');
 @import url('./variables.css');
 @import url('./accessibility.css');
+@import url('./footer.css');
 
 /* ---------- Reset & base ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,9 +56,16 @@ input, select, textarea { font-family: var(--font-sans); }
   min-width: 0;
 }
 
-.layout-main > main {
+.layout-main > .layout-scroll {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#view-content {
+  flex: 1 0 auto;
   padding: var(--space-5);
 }
 
@@ -98,7 +106,7 @@ input, select, textarea { font-family: var(--font-sans); }
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 10px 8px;
+  padding: 8px 6px;
 }
 
 .sidebar-item {
@@ -415,6 +423,13 @@ textarea.input { resize: vertical; min-height: 80px; }
   flex-wrap: wrap;
   background: linear-gradient(180deg, #fff 0%, var(--c-gris0) 100%);
   border: 1px solid var(--c-gris2);
+}
+.list-toolbar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-width: min(100%, 320px);
 }
 .list-toolbar-fields {
   display: flex;

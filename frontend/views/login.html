@@ -7,24 +7,28 @@
     <link rel="stylesheet" href="../css/styles.css" />
     <link rel="stylesheet" href="../css/login.css" />
     <link rel="stylesheet" href="../css/responsive.css" />
+    <script>
+      (function () {
+        try {
+          if (
+            sessionStorage.getItem("sgfc:login-panel-transition") === "to-login"
+          ) {
+            document.documentElement.classList.add("login-awaiting-to-login");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body data-view="login">
     <div class="login-layout">
       <div class="login-panel-left">
         <div class="content">
           <div class="sgfc-logo dark">
-            <div class="icon-box">
-              <svg
-                width="21"
-                height="21"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#fff"
-                stroke-width="2"
-              >
-                <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
-              </svg>
-            </div>
+            <img
+              class="logo-sena"
+              src="../images/logo-login.png"
+              alt="Logo SENA"
+            />
             <div class="sep"></div>
             <div class="text-block">
               <div>
@@ -35,10 +39,12 @@
           <h1>Sistema de Gestión<br />Financiera y<br />Contractual</h1>
           <p class="lead" id="login-lead">
             Plataforma institucional para la gestión, validación y seguimiento
-            documental de contratistas del SENA.
+            documental de contratistas del SENA Regional Caldas.
           </p>
         </div>
-        <div class="login-footer" id="login-footer">SENA - ADSO - CPIC</div>
+        <div class="login-footer" id="login-footer">
+          SENA Regional Caldas — Centro de Procesos Industriales
+        </div>
       </div>
 
       <div class="login-panel-right" id="login-panel-right">
@@ -47,10 +53,11 @@
           aria-hidden="true"
         ></canvas>
         <div class="login-form fade-up">
-          <h2>Iniciar sesión</h2>
-          <p class="sub">Ingresa tus credenciales institucionales SENA</p>
+          <div class="login-form-card">
+            <h2>Iniciar sesión</h2>
+            <p class="sub">Ingresa tus credenciales institucionales SENA</p>
 
-          <div id="error-box" class="alert hidden">
+            <div id="error-box" class="alert hidden">
             <svg
               width="15"
               height="15"
@@ -138,11 +145,15 @@
               <span id="btn-label">Ingresar al sistema</span>
             </button>
             <div class="login-forgot-wrap">
-              <a href="#" class="login-forgot-link"
+              <a
+                href="olvide-contrasena.html"
+                class="login-forgot-link"
+                data-login-transition="to-forgot"
                 >¿Olvidaste tu contraseña?</a
               >
             </div>
           </form>
+          </div>
 
           <div class="login-demo-creds">
             <p class="login-demo-title">
@@ -170,15 +181,43 @@
       </div>
     </div>
 
+    <div id="sgfc-footer-mount"></div>
+
     <script type="module">
       import { api } from "../js/api.js";
       import { setUser, defaultViewForRole } from "../js/auth.js";
-      import { showToast } from "../js/components.js";
+      import { showToast, renderFooter, initFooter } from "../js/components.js";
       import { initAccessibility } from "../js/accessibility.js";
       import { initLoginBubbles } from "../js/login-bubbles.js";
+      import {
+        initLoginPanelTransition,
+        bindLoginPanelTransitionLinks,
+      } from "../js/login-panel-transition.js";
+
+      initLoginPanelTransition("login");
+      bindLoginPanelTransitionLinks();
 
       initAccessibility();
       initLoginBubbles(document.getElementById("login-panel-right"));
+
+      const $footerMount = document.getElementById("sgfc-footer-mount");
+      if ($footerMount) {
+        $footerMount.outerHTML = renderFooter();
+        initFooter();
+      }
+
+      async function applyInstitucionalBranding() {
+        const $lead = document.getElementById("login-lead");
+        if (!$lead) return;
+        try {
+          const r = await api.get("/public/institucional", { silent: true });
+          const b = r?.data;
+          if (b?.descripcion_login) $lead.textContent = b.descripcion_login;
+        } catch {
+          /* Mantiene el texto por defecto del HTML */
+        }
+      }
+      applyInstitucionalBranding();
 
       const $err = document.getElementById("error-box");
       const $msg = document.getElementById("error-msg");
@@ -319,18 +358,6 @@
       });
 
       initSecurity();
-
-      (async () => {
-        try {
-          const r = await api.get("/public/institucional", { silent: true });
-          const b = r?.data;
-          if (b?.descripcion_login)
-            document.getElementById("login-lead").textContent =
-              b.descripcion_login;
-          if (b?.pie_pagina)
-            document.getElementById("login-footer").textContent = b.pie_pagina;
-        } catch {}
-      })();
 
       // Si ya hay sesión activa, redirigir
       (async () => {

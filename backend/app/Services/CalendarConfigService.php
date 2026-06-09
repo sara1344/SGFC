@@ -213,6 +213,29 @@ final class CalendarConfigService
         return self::isBusinessDay($dateYmd);
     }
 
+    /** Suma N días hábiles a partir del día siguiente a $fromYmd (inclusive el resultado). */
+    public static function addBusinessDays(string $fromYmd, int $businessDays): string
+    {
+        if ($businessDays <= 0) {
+            return $fromYmd;
+        }
+        try {
+            $dt = new DateTimeImmutable($fromYmd, self::timezone());
+        } catch (\Throwable) {
+            return $fromYmd;
+        }
+
+        $added = 0;
+        while ($added < $businessDays) {
+            $dt = $dt->modify('+1 day');
+            if (self::isBusinessDay($dt->format('Y-m-d'))) {
+                $added++;
+            }
+        }
+
+        return $dt->format('Y-m-d');
+    }
+
     public static function deadlineErrorMessage(string $dateYmd): string
     {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateYmd)) {

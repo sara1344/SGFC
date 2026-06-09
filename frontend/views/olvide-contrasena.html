@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SGFC — Recuperar contraseña | SENA</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/login.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script>
+      (function () {
+        try {
+          if (
+            sessionStorage.getItem("sgfc:login-panel-transition") === "to-forgot"
+          ) {
+            document.documentElement.classList.add("login-awaiting-transition");
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body data-view="olvide-contrasena">
+    <div class="login-layout login-layout--form-left">
+      <div class="login-panel-right" id="login-panel-right">
+        <canvas
+          class="login-bubbles-canvas login-bubbles-canvas--bl"
+          aria-hidden="true"
+        ></canvas>
+        <div class="login-form fade-up">
+          <div class="login-form-card">
+            <a
+              href="login.html"
+              class="login-back-link"
+              data-login-transition="to-login"
+              >Volver al inicio de sesión →</a
+            >
+            <h2>¿Olvidaste tu contraseña?</h2>
+            <p class="sub">
+              Indique su nombre de usuario y correo electrónico institucional.
+            </p>
+
+            <div id="error-box" class="alert hidden">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span id="error-msg">Mensaje</span>
+          </div>
+
+          <div id="success-box" class="alert alert-success hidden">
+            <span id="success-msg">Mensaje</span>
+          </div>
+
+          <form id="forgot-form" autocomplete="off">
+            <div class="login-form-group">
+              <label class="label" for="usuario">Nombre de usuario</label>
+              <input
+                type="text"
+                id="usuario"
+                class="input"
+                placeholder="Ej. cs60860"
+                autocomplete="username"
+                required
+                spellcheck="false"
+              />
+              <p class="login-user-hint">
+                El mismo usuario con el que ingresa al sistema.
+              </p>
+            </div>
+
+            <div class="login-form-group login-form-group--correo">
+              <label class="label" for="correo">Correo electrónico</label>
+              <input
+                type="email"
+                id="correo"
+                class="input"
+                placeholder="correo@sena.edu.co"
+                autocomplete="email"
+                required
+              />
+            </div>
+
+            <div id="recaptcha-wrap">
+              <div class="recaptcha-hint">Verificación de seguridad</div>
+              <div id="recaptcha-container"></div>
+            </div>
+
+            <button class="btn btn-block btn-lg" id="submit-btn" type="submit">
+              <span id="btn-label">Enviar enlace de recuperación</span>
+            </button>
+          </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-panel-left">
+        <div class="content">
+          <div class="sgfc-logo dark">
+            <img
+              class="logo-sena"
+              src="../images/logo-login.png"
+              alt="Logo SENA"
+            />
+            <div class="sep"></div>
+            <div class="text-block">
+              <div>
+                <span class="brand">SGFC</span><span class="tag">SENA</span>
+              </div>
+            </div>
+          </div>
+          <h1>Sistema de Gestión<br />Financiera y<br />Contractual</h1>
+          <p class="lead" id="login-lead">
+            Plataforma institucional para la gestión, validación y seguimiento
+            documental de contratistas del SENA.
+          </p>
+        </div>
+        <div class="login-footer" id="login-footer">
+          <div>SENA — CPIC</div>
+          <div class="login-footer-credits">Sara / Carlos / Nicol</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sgfc-footer-mount"></div>
+
+    <script type="module">
+      import { api } from "../js/api.js";
+      import { renderFooter, initFooter } from "../js/components.js";
+      import { initAccessibility } from "../js/accessibility.js";
+      import { initLoginBubbles } from "../js/login-bubbles.js";
+      import { createLoginRecaptcha } from "../js/login-recaptcha.js";
+      import {
+        initLoginPanelTransition,
+        bindLoginPanelTransitionLinks,
+      } from "../js/login-panel-transition.js";
+
+      initLoginPanelTransition("forgot");
+      bindLoginPanelTransitionLinks();
+
+      initAccessibility();
+      initLoginBubbles(document.getElementById("login-panel-right"));
+
+      const $footerMount = document.getElementById("sgfc-footer-mount");
+      if ($footerMount) {
+        $footerMount.outerHTML = renderFooter();
+        initFooter();
+      }
+
+      const $err = document.getElementById("error-box");
+      const $ok = document.getElementById("success-box");
+      const $errMsg = document.getElementById("error-msg");
+      const $okMsg = document.getElementById("success-msg");
+      const $form = document.getElementById("forgot-form");
+      const $btn = document.getElementById("submit-btn");
+      const $lbl = document.getElementById("btn-label");
+      const $capWrap = document.getElementById("recaptcha-wrap");
+
+      const recaptcha = createLoginRecaptcha({
+        wrapEl: $capWrap,
+        onError: showError,
+      });
+
+      function showError(msg) {
+        $ok.classList.add("hidden");
+        $errMsg.textContent = msg;
+        $err.classList.remove("hidden");
+      }
+
+      function showSuccess(msg) {
+        $err.classList.add("hidden");
+        $okMsg.textContent = msg;
+        $ok.classList.remove("hidden");
+        $form.classList.add("hidden");
+      }
+
+      recaptcha.initSecurity();
+
+      $form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        $err.classList.add("hidden");
+        $ok.classList.add("hidden");
+
+        const usuario = document.getElementById("usuario").value.trim();
+        const correo = document.getElementById("correo").value.trim();
+        if (!usuario || !correo) {
+          return showError("Usuario y correo son obligatorios.");
+        }
+
+        let recaptchaToken = "";
+        try {
+          recaptchaToken = recaptcha.tokenForSubmit();
+        } catch (err) {
+          return showError(err.message);
+        }
+
+        $btn.disabled = true;
+        $lbl.textContent = "Enviando…";
+        try {
+          const body = { usuario, correo };
+          if (recaptchaToken) body.recaptcha_token = recaptchaToken;
+          const res = await api.post(
+            "/auth/forgot-password",
+            body,
+            { silent: true },
+          );
+          showSuccess(
+            res.message ||
+              "Si el usuario y el correo coinciden con una cuenta activa, recibirá un enlace para restablecer su contraseña en los próximos minutos.",
+          );
+        } catch (err) {
+          showError(err.message || "No se pudo procesar la solicitud.");
+          recaptcha.resetWidget();
+          $btn.disabled = false;
+          $lbl.textContent = "Enviar enlace de recuperación";
+        }
+      });
+    </script>
+  </body>
+</html>

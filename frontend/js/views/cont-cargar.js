@@ -8,6 +8,7 @@ import { api } from '../api.js';
 import { $, escapeHtml, fmtDate } from '../utils.js';
 import { renderLayout, icon, openModal, showToast } from '../components.js';
 import { getUser } from '../auth.js';
+import { openEvidenceSignatureModal } from '../evidence-signature.js';
 import {
   acceptForFormat,
   formatHint,
@@ -17,8 +18,12 @@ import {
 } from '../evidence-formats.js';
 
 let activePeriod = null;
+/** @type {Array<Record<string, unknown>>} */
+let allPeriods = [];
 let assignments = [];
 let contract = null;
+/** @type {Record<string, unknown>|null} */
+let uploadWindow = null;
 let unifiedPdf = null;
 let zipGc = null;
 /** @type {Map<string, File>} Archivos elegidos pero aún no enviados, por id_asignacion */
@@ -40,25 +45,72 @@ export async function init() {
 async function load() {
   const user = getUser();
   const cs = await api.get('/contracts');
-  contract = cs.data.find(c => c.estado === 'Activo' && c.id_persona == user.id);
+  contract = cs.data.find(c => c.estado === 'Activo' && Number(c.id_persona) === Number(user.id));
   if (!contract) {
     $('#page').innerHTML = `<div class="card card-pad"><p>No tienes un contrato activo asignado.</p></div>`;
     return;
   }
   const ps = await api.get('/periods?contrato=' + contract.id_contrato);
-  const now = new Date();
-  activePeriod = ps.data.find(p => p.mes == now.getMonth() + 1 && p.anio == now.getFullYear())
-              || ps.data.find(p => p.estado !== 'Bloqueado' && p.estado !== 'Firmado');
+  allPeriods = ps.data || [];
+  const urlPeriod = new URLSearchParams(location.search).get('periodo');
+  activePeriod = pickDefaultPeriod(allPeriods, urlPeriod);
   if (!activePeriod) {
-    $('#page').innerHTML = `<div class="card card-pad"><p>No hay un periodo activo para tu contrato.</p></div>`;
+    $('#page').innerHTML = `<div class="card card-pad"><p>No hay un periodo disponible para tu contrato. Si el administrativo asignó evidencias en un mes anterior, verifique que ese periodo esté activo.</p></div>`;
     return;
   }
-  const r = await api.get('/periods/' + activePeriod.id_periodo);
+  await loadPeriodData(activePeriod.id_periodo);
+}
+
+function isPeriodOpen(p) {
+  return p.estado !== 'Bloqueado' && p.estado !== 'Firmado';
+}
+
+function pickDefaultPeriod(periods, preferredId = null) {
+  const sorted = [...periods].sort((a, b) => Number(a.anio) - Number(b.anio) || Number(a.mes) - Number(b.mes));
+  if (preferredId) {
+    const forced = sorted.find(p => String(p.id_periodo) === String(preferredId) && isPeriodOpen(p));
+    if (forced) return forced;
+  }
+
+  const storageKey = `sgfc:period:${contract?.id_contrato}`;
+  const saved = sessionStorage.getItem(storageKey);
+  if (saved) {
+    const remembered = sorted.find(p => String(p.id_periodo) === saved && isPeriodOpen(p));
+    if (remembered) return remembered;
+  }
+
+  const now = new Date();
+  const curM = now.getMonth() + 1;
+  const curY = now.getFullYear();
+  const withActiveProrroga = [...sorted].reverse().find(p => isPeriodOpen(p) && Number(p.prorroga_activa || 0) > 0);
+  if (withActiveProrroga) return withActiveProrroga;
+
+  const current = sorted.find(p => Number(p.mes) === curM && Number(p.anio) === curY && isPeriodOpen(p));
+  if (current) return current;
+
+  const withEvidence = [...sorted].reverse().find(p => isPeriodOpen(p) && Number(p.evidencias_count || 0) > 0);
+  if (withEvidence) return withEvidence;
+
+  return [...sorted].reverse().find(p => isPeriodOpen(p)) || null;
+}
+
+async function loadPeriodData(periodId) {
+  const r = await api.get('/periods/' + periodId);
+  activePeriod = r.data.periodo || allPeriods.find(p => String(p.id_periodo) === String(periodId)) || activePeriod;
   assignments = r.data.evidencias || [];
+  uploadWindow = r.data.ventana_carga || null;
   unifiedPdf = r.data.pdf_unificado || null;
   zipGc = r.data.zip_gc || null;
+  if (contract?.id_contrato) {
+    sessionStorage.setItem(`sgfc:period:${contract.id_contrato}`, String(periodId));
+  }
   syncPendingFiles();
   render();
+}
+
+async function switchPeriod(periodId) {
+  pendingFiles.clear();
+  await loadPeriodData(periodId);
 }
 
 function evidenceEstado(ev) {
@@ -91,9 +143,33 @@ function isEvidenceLocked(ev) {
   return evidenceEstado(ev) === 'Aprobada';
 }
 
+function evidenceRequiresSignature(ev) {
+  return Number(ev?.requiere_firma) === 1;
+}
+
+function evidenceIsSigned(ev) {
+  return Number(ev?.firmado_contratista) === 1;
+}
+
+function canSignEvidence(ev) {
+  return evidenceRequiresSignature(ev)
+    && ev.ultimo_upload_id
+    && evidenceEstado(ev) !== 'Pendiente entrega'
+    && !isEvidenceLocked(ev)
+    && !isUploadWindowClosed();
+}
+
 function isAssignmentLocked(asignacionId) {
   const ev = assignments.find(a => String(a.id_asignacion) === String(asignacionId));
   return ev ? isEvidenceLocked(ev) : false;
+}
+
+function isUploadWindowClosed() {
+  return uploadWindow && uploadWindow.puede_subir === false;
+}
+
+function canRequestProrroga() {
+  return !!uploadWindow?.puede_solicitar_prorroga;
 }
 
 function syncPendingFiles() {
@@ -181,14 +257,19 @@ function render() {
           <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.6px;">Contrato activo</div>
           <div style="font-size:18px;font-weight:900;color:#fff;">#${contract.id_contrato}</div>
         </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.6px;">Período actual</div>
-          <div style="font-size:15px;font-weight:700;color:#fff;">${escapeHtml(activePeriod.nombre_periodo)}</div>
+        <div style="min-width:180px;">
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.6px;">Período</div>
+          ${renderPeriodSelector()}
         </div>
         <div>
           <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.6px;">Fecha límite</div>
-          <div style="font-size:15px;font-weight:700;color:#fff;">${fmtDate(activePeriod.fecha_limite)}</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">${fmtDate(uploadWindow?.fecha_limite_efectiva || activePeriod.fecha_limite)}</div>
+          ${uploadWindow?.prorroga_activa ? `<div style="font-size:10px;color:#FDE68A;margin-top:2px;">Prórroga hasta ${fmtDate(uploadWindow.fecha_limite_efectiva)}</div>` : ''}
         </div>
+        ${canRequestProrroga() ? `
+        <div>
+          <button type="button" class="btn btn-sm" id="btn-prorroga" style="background:#EA580C;">${icon('calendar',{size:12,color:'#fff'})}Solicitar prórroga</button>
+        </div>` : ''}
         <div style="flex:1;min-width:200px;">
           <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;">Progreso general</div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -200,6 +281,26 @@ function render() {
         </div>
       </div>
     </div>
+
+    ${uploadWindow && !uploadWindow.puede_subir ? `
+    <div class="card card-pad mb-3" style="background:#FFF7ED;border:1px solid #FDBA74;">
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        ${icon('alertTriangle',{size:18,color:'#EA580C'})}
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#9A3412;">Plazo de entrega cerrado</div>
+          <div style="font-size:13px;color:#7C2D12;margin-top:4px;line-height:1.45;">${escapeHtml(uploadWindow.mensaje || 'El plazo venció. Solicite una prórroga para continuar.')}</div>
+          ${uploadWindow.prorroga_pendiente ? `<div style="font-size:12px;color:#9A3412;margin-top:6px;">Solicitud enviada: <strong>${uploadWindow.prorroga_pendiente.dias_solicitados} días hábiles</strong> — en revisión.</div>` : ''}
+        </div>
+      </div>
+    </div>` : ''}
+
+    ${uploadWindow?.prorroga_activa ? `
+    <div class="card card-pad mb-3" style="background:var(--c-verde-light);border:1px solid #BBF7D0;">
+      <div style="display:flex;gap:10px;align-items:center;">
+        ${icon('checkCircle',{size:18,color:'#39A900'})}
+        <div style="font-size:13px;color:var(--c-gris7);">${escapeHtml(uploadWindow.mensaje || '')}</div>
+      </div>
+    </div>` : ''}
 
     <div class="grid grid-4 mb-3">
       <div class="card" style="padding:12px 14px;border-top:3px solid var(--c-verde);display:flex;align-items:center;gap:10px;">${icon('checkCircle',{size:18,color:'#39A900'})}<div><div style="font-size:20px;font-weight:800;">${s.apr}</div><div style="font-size:11px;color:var(--c-gris5);">Aprobadas</div></div></div>
@@ -263,7 +364,14 @@ function render() {
     (a, b) => (moduleOrder[a.codigo] ?? 99) - (moduleOrder[b.codigo] ?? 99)
   );
 
-  $('#evid-list').innerHTML = modules.map(m => `
+  $('#evid-list').innerHTML = assignments.length === 0 ? `
+    <div class="card card-pad text-center" style="padding:32px 20px;">
+      ${icon('inbox',{size:36,color:'var(--c-gris3)'})}
+      <p style="margin-top:12px;font-size:14px;font-weight:600;color:var(--c-gris6);">No hay evidencias asignadas en <strong>${escapeHtml(activePeriod.nombre_periodo)}</strong></p>
+      <p style="font-size:13px;color:var(--c-gris5);margin-top:6px;max-width:480px;margin-left:auto;margin-right:auto;">
+        Si el administrativo asignó evidencias en otro mes, selecciónelo en el desplegable <strong>Período</strong> arriba.
+      </p>
+    </div>` : modules.map(m => `
     <div class="card mb-3" style="overflow:hidden;">
       <div style="padding:14px 18px;background:${m.codigo === 'GF' ? 'var(--c-verde-light)' : 'var(--c-azul-light)'};display:flex;align-items:center;gap:12px;">
         <div style="width:6px;height:32px;border-radius:3px;background:${m.color};"></div>
@@ -285,6 +393,27 @@ function render() {
 
   $('#btn-merge-gf')?.addEventListener('click', confirmMergeGf);
   $('#btn-pack-gc')?.addEventListener('click', confirmPackGc);
+  $('#btn-prorroga')?.addEventListener('click', openProrrogaModal);
+  $('#period-select')?.addEventListener('change', async (e) => {
+    const id = e.target.value;
+    if (id && String(id) !== String(activePeriod.id_periodo)) {
+      await switchPeriod(id);
+    }
+  });
+}
+
+function renderPeriodSelector() {
+  const openPeriods = allPeriods.filter(isPeriodOpen);
+  if (openPeriods.length <= 1) {
+    return `<div style="font-size:15px;font-weight:700;color:#fff;">${escapeHtml(activePeriod.nombre_periodo)}</div>`;
+  }
+  return `
+    <select id="period-select" class="input" style="margin-top:4px;max-width:220px;font-weight:700;color:var(--c-azul);">
+      ${openPeriods.map(p => `
+        <option value="${p.id_periodo}" ${String(p.id_periodo) === String(activePeriod.id_periodo) ? 'selected' : ''}>
+          ${escapeHtml(p.nombre_periodo)}${Number(p.evidencias_count || 0) > 0 ? ` (${p.evidencias_count} evid.)` : ''}
+        </option>`).join('')}
+    </select>`;
 }
 
 function renderEvidenceCard(ev, color) {
@@ -313,6 +442,11 @@ function renderEvidenceCard(ev, color) {
               : `<span style="font-size:10px;color:var(--c-gris4);background:var(--c-gris1);padding:1px 7px;border-radius:20px;">Opcional</span>`
             }
             <span style="font-size:10px;font-weight:700;background:var(--c-gris1);color:var(--c-gris6);padding:1px 7px;border-radius:20px;">Formato: ${escapeHtml(formatLabel(ev.tipo_archivo))}</span>
+            ${evidenceRequiresSignature(ev)
+              ? (evidenceIsSigned(ev)
+                ? `<span style="font-size:10px;font-weight:700;background:var(--c-azul-firma-light);color:var(--c-azul-firma);padding:1px 7px;border-radius:20px;">${icon('penLine',{size:9,color:'currentColor'})} Firmada</span>`
+                : `<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:1px 7px;border-radius:20px;">${icon('alertCircle',{size:9,color:'currentColor'})} Pendiente de firma</span>`)
+              : ''}
             ${hasFile && !pending && ev.ultimo_archivo
               ? `<span style="font-size:10px;color:var(--c-azul);background:var(--c-azul-light);padding:1px 7px;border-radius:20px;">${icon('fileText',{size:9,color:'currentColor'})} ${escapeHtml(ev.ultimo_archivo)}</span>`
               : ''}
@@ -337,6 +471,13 @@ function renderEvidenceCard(ev, color) {
 }
 
 function renderUploadControls(ev, color, hasFile, pending, canUpload) {
+  if (isUploadWindowClosed()) {
+    return `
+      <div style="margin-top:10px;background:var(--c-gris0);border:1px solid var(--c-gris2);border-radius:7px;padding:8px 12px;font-size:12px;color:var(--c-gris5);display:flex;gap:7px;align-items:center;">
+        ${icon('lock',{size:13})}
+        <span>Carga bloqueada: el plazo de entrega venció.</span>
+      </div>`;
+  }
   const id = ev.id_asignacion;
   const format = normalizeFormat(ev.tipo_archivo);
   const showPicker = !hasFile || pending;
@@ -359,6 +500,9 @@ function renderUploadControls(ev, color, hasFile, pending, canUpload) {
       ${hasFile && !pending
         ? `<button type="button" class="btn btn-sec btn-sm btn-edit-evidence" data-id="${id}">${icon('edit',{size:12})}Editar</button>`
         : ''}
+      ${canSignEvidence(ev)
+        ? `<button type="button" class="btn btn-sm btn-sign-evidence" data-upload="${ev.ultimo_upload_id}" data-id="${id}" style="background:var(--c-azul-firma);">${icon('penLine',{size:12,color:'#fff'})}${evidenceIsSigned(ev) ? 'Volver a firmar' : 'Firmar'}</button>`
+        : ''}
       <button type="button" class="btn btn-sm btn-upload-evidence" data-id="${id}" ${canUpload ? '' : 'disabled'}>${icon('upload',{size:12,color: canUpload ? '#fff' : 'var(--c-gris4)'})}Subir</button>
       ${pending && hasFile
         ? `<button type="button" class="btn btn-ghost btn-sm btn-cancel-evidence" data-id="${id}">Cancelar</button>`
@@ -373,7 +517,7 @@ function bindUploadListenersOnce() {
   document.addEventListener('change', e => {
     const input = e.target.closest('.upload-input');
     if (!input || !input.closest('#page')) return;
-    if (isAssignmentLocked(input.dataset.id)) return;
+    if (isAssignmentLocked(input.dataset.id) || isUploadWindowClosed()) return;
     const file = input.files?.[0];
     input.value = '';
     const ev = assignments.find(a => String(a.id_asignacion) === String(input.dataset.id));
@@ -386,8 +530,18 @@ function bindUploadListenersOnce() {
     const editBtn = e.target.closest('.btn-edit-evidence');
     if (editBtn?.closest('#page')) {
       e.preventDefault();
-      if (isAssignmentLocked(editBtn.dataset.id)) return;
+      if (isAssignmentLocked(editBtn.dataset.id) || isUploadWindowClosed()) return;
       $(`.upload-input[data-id="${editBtn.dataset.id}"]`)?.click();
+      return;
+    }
+
+    const signBtn = e.target.closest('.btn-sign-evidence');
+    if (signBtn?.closest('#page')) {
+      e.preventDefault();
+      const uploadId = parseInt(signBtn.dataset.upload, 10);
+      if (uploadId) {
+        openEvidenceSignatureModal(uploadId, { onDone: () => load() });
+      }
       return;
     }
 
@@ -395,7 +549,7 @@ function bindUploadListenersOnce() {
     if (uploadBtn?.closest('#page')) {
       e.preventDefault();
       e.stopPropagation();
-      if (uploadBtn.disabled || isAssignmentLocked(uploadBtn.dataset.id)) return;
+      if (uploadBtn.disabled || isAssignmentLocked(uploadBtn.dataset.id) || isUploadWindowClosed()) return;
       const file = pendingFiles.get(String(uploadBtn.dataset.id));
       if (file) handleUpload(uploadBtn.dataset.id, file);
       return;
@@ -412,14 +566,14 @@ function bindUploadListenersOnce() {
     const zone = e.target.closest('.drop-zone');
     if (zone?.closest('#page')) {
       e.preventDefault();
-      if (isAssignmentLocked(zone.dataset.id)) return;
+      if (isAssignmentLocked(zone.dataset.id) || isUploadWindowClosed()) return;
       $(`.upload-input[data-id="${zone.dataset.id}"]`)?.click();
     }
   });
 
   document.addEventListener('dragover', e => {
     const zone = e.target.closest('.drop-zone');
-    if (!zone?.closest('#page') || isAssignmentLocked(zone.dataset.id)) return;
+    if (!zone?.closest('#page') || isAssignmentLocked(zone.dataset.id) || isUploadWindowClosed()) return;
     e.preventDefault();
     zone.style.background = 'var(--c-verde-light)';
   });
@@ -432,7 +586,7 @@ function bindUploadListenersOnce() {
 
   document.addEventListener('drop', e => {
     const zone = e.target.closest('.drop-zone');
-    if (!zone?.closest('#page') || isAssignmentLocked(zone.dataset.id)) return;
+    if (!zone?.closest('#page') || isAssignmentLocked(zone.dataset.id) || isUploadWindowClosed()) return;
     e.preventDefault();
     zone.style.background = 'transparent';
     const file = e.dataTransfer?.files?.[0];
@@ -444,7 +598,69 @@ function bindUploadListenersOnce() {
   });
 }
 
+function openProrrogaModal() {
+  let selectedDays = 5;
+  openModal({
+    title: 'Solicitar prórroga',
+    width: 520,
+    html: `
+      <p style="font-size:13px;color:var(--c-gris6);margin-bottom:14px;">
+        No completó la entrega antes del <strong>${fmtDate(uploadWindow?.fecha_limite || activePeriod.fecha_limite)}</strong>.
+        Elija el tiempo adicional en <strong>días hábiles</strong> (sin contar fines de semana ni festivos) y justifique su solicitud.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        ${[5, 15, 20].map(d => `
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--c-gris2);border-radius:8px;cursor:pointer;" class="prorroga-opt" data-days="${d}">
+            <input type="radio" name="prorroga-dias" value="${d}" ${d === 5 ? 'checked' : ''}>
+            <span style="font-size:14px;font-weight:700;">${d} días hábiles</span>
+          </label>`).join('')}
+      </div>
+      <label class="label">Justificación</label>
+      <textarea class="input" id="prorroga-just" rows="4" maxlength="2000" placeholder="Explique por qué necesita la prórroga (mínimo 15 caracteres)"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+        <button type="button" class="btn btn-sec" data-cancel>Cancelar</button>
+        <button type="button" class="btn" id="prorroga-submit">${icon('send',{size:12,color:'#fff'})}Enviar solicitud</button>
+      </div>`,
+    onOpen: (modal, close) => {
+      modal.querySelector('[data-cancel]').addEventListener('click', close);
+      modal.querySelectorAll('.prorroga-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+          selectedDays = Number(opt.dataset.days);
+          opt.querySelector('input')?.click();
+        });
+      });
+      modal.querySelectorAll('input[name="prorroga-dias"]').forEach(r => {
+        r.addEventListener('change', () => { selectedDays = Number(r.value); });
+      });
+      modal.querySelector('#prorroga-submit').addEventListener('click', async () => {
+        const just = modal.querySelector('#prorroga-just')?.value?.trim() || '';
+        if (just.length < 15) {
+          showToast('warning', 'Justificación', 'Escriba al menos 15 caracteres.');
+          return;
+        }
+        const btn = modal.querySelector('#prorroga-submit');
+        btn.disabled = true;
+        try {
+          await api.post(`/periods/${activePeriod.id_periodo}/prorroga`, {
+            dias: selectedDays,
+            justificacion: just,
+          });
+          showToast('success', 'Enviada', 'Su solicitud fue enviada al administrativo de centro.');
+          close();
+          load();
+        } catch {
+          btn.disabled = false;
+        }
+      });
+    },
+  });
+}
+
 async function handleUpload(asignacionId, file) {
+  if (isUploadWindowClosed()) {
+    showToast('warning', 'Plazo cerrado', uploadWindow?.mensaje || 'El plazo de entrega venció.');
+    return;
+  }
   if (isAssignmentLocked(asignacionId)) {
     showToast('warning', 'Bloqueada', 'Esta evidencia ya fue aprobada y no puede modificarse.');
     return;
@@ -456,7 +672,7 @@ async function handleUpload(asignacionId, file) {
     await api.upload('/uploads/evidence', fd);
     pendingFiles.delete(String(asignacionId));
     showToast('success', 'Cargado', 'Archivo enviado, pendiente de revisión.');
-    load();
+    await load();
   } catch {}
 }
 

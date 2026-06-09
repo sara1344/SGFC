@@ -1,0 +1,151 @@
+/* ==========================================================================
+   SGFC — Footer institucional SENA
+   ========================================================================== */
+
+.sgfc-footer {
+  position: relative;
+  background: var(--c-azul);
+  color: #fff;
+  overflow: hidden;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.sgfc-footer-mesh {
+  position: absolute;
+  width: min(42vw, 360px);
+  height: min(32vw, 260px);
+  pointer-events: none;
+  opacity: 0.22;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='240' viewBox='0 0 320 240'%3E%3Cg fill='none' stroke='%2350E5F9' stroke-width='0.65'%3E%3Cpolygon points='20,30 80,10 140,40 100,90 30,70'/%3E%3Cpolygon points='120,20 200,35 240,80 180,110 110,85'/%3E%3Cpolygon points='40,120 100,100 160,130 130,190 50,170'/%3E%3Cpolygon points='180,130 260,110 300,160 220,200 150,175'/%3E%3Cline x1='80' y1='10' x2='120' y2='20'/%3E%3Cline x1='140' y1='40' x2='200' y2='35'/%3E%3Cline x1='100' y1='90' x2='180' y2='110'/%3E%3Cline x1='30' y1='70' x2='110' y2='85'/%3E%3Cline x1='100' y1='100' x2='180' y2='130'/%3E%3Cline x1='160' y1='130' x2='260' y2='110'/%3E%3Cline x1='130' y1='190' x2='220' y2='200'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.sgfc-footer-mesh--tl {
+  top: -20px;
+  left: -10px;
+}
+
+.sgfc-footer-mesh--br {
+  right: -10px;
+  bottom: -20px;
+  transform: rotate(180deg);
+}
+
+.sgfc-footer-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 18px);
+  padding: clamp(22px, 3vw, 36px) clamp(18px, 4vw, 48px);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.sgfc-footer-photo {
+  flex-shrink: 0;
+}
+
+.sgfc-footer-photo-img {
+  width: clamp(170px, 20vw, 270px);
+  height: auto;
+  object-fit: cover;
+}
+
+.sgfc-footer-photo-img--warm {
+  display: none;
+}
+
+html[data-rest-mode="on"] .sgfc-footer-photo-img--default {
+  display: none;
+}
+
+html[data-rest-mode="on"] .sgfc-footer-photo-img--warm {
+  display: block;
+}
+
+.sgfc-footer-brand {
+  text-align: center;
+  min-width: 0;
+}
+
+.sgfc-footer-tagline {
+  font-size: clamp(14px, 1.6vw, 20px);
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.sgfc-footer-sub {
+  font-size: clamp(10px, 1.1vw, 13px);
+  font-weight: 500;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 16px;
+}
+
+.sgfc-footer-pie {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+.sgfc-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sgfc-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #fff;
+  transition: opacity 0.15s;
+}
+
+.sgfc-footer-link:hover {
+  opacity: 0.78;
+}
+
+.sgfc-footer-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sgfc-footer-link-icon .icon {
+  stroke: #fff;
+}
+
+/* Login: footer a ancho completo bajo el layout */
+body[data-view="login"] .sgfc-footer,
+body[data-view="olvide-contrasena"] .sgfc-footer,
+body[data-view="restablecer-contrasena"] .sgfc-footer {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .sgfc-footer-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .sgfc-footer-photo {
+    display: flex;
+    justify-content: center;
+  }
+}

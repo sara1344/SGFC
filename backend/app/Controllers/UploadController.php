@@ -19,6 +19,8 @@ use App\Services\EvidencePreviewService;
 use App\Services\ModulesConfigService;
 
 use App\Services\NotificationService;
+use App\Services\EvidenceSignatureService;
+use App\Services\PeriodExtensionService;
 
 
 
@@ -80,6 +82,8 @@ final class UploadController extends Controller
             $this->error('Esta evidencia no le pertenece.', 403);
 
         }
+
+        PeriodExtensionService::assertCanUpload((int) $own['id_periodo']);
 
 
 
@@ -259,6 +263,26 @@ final class UploadController extends Controller
     }
 
 
+
+    /** GET /api/uploads/evidence/{id}/signature-meta */
+    public function signatureMeta(int $id): void
+    {
+        RlsMiddleware::ownsOrReviewsUpload($id);
+        $user = $this->user();
+        $this->success(EvidenceSignatureService::signatureMeta($id, (int) $user['id']));
+    }
+
+    /** POST /api/uploads/evidence/{id}/sign */
+    public function sign(int $id): void
+    {
+        if (!ModulesConfigService::featureEnabled('carga_contratista')) {
+            $this->error('La carga de evidencias está deshabilitada.', 403);
+        }
+        RlsMiddleware::ownsOrReviewsUpload($id);
+        $user = $this->user();
+        EvidenceSignatureService::applyContractorSignature($id, (int) $user['id'], $this->input());
+        $this->success(null, 'Firma aplicada al documento.');
+    }
 
     public function download(int $id): void
 

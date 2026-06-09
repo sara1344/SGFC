@@ -28,6 +28,7 @@ use App\Controllers\NotificationController;
 use App\Controllers\DashboardController;
 use App\Controllers\SuperAdminController;
 use App\Controllers\SystemConfigController;
+use App\Controllers\ProrrogaController;
 use App\Middlewares\AuthMiddleware;
 
 final class Router
@@ -38,6 +39,10 @@ final class Router
         ['POST',   '/api/auth/login',                AuthController::class,         'login',     false],
         ['POST',   '/api/auth/logout',               AuthController::class,         'logout',    true ],
         ['GET',    '/api/auth/me',                   AuthController::class,         'me',        true ],
+        ['GET',    '/api/auth/signature',            AuthController::class,         'signature', true ],
+        ['POST',   '/api/auth/forgot-password',      AuthController::class,         'forgotPassword', false],
+        ['GET',    '/api/auth/reset-password/validate', AuthController::class,    'validateResetToken', false],
+        ['POST',   '/api/auth/reset-password',       AuthController::class,         'resetPassword', false],
 
         // Catálogos
         ['GET',    '/api/catalog/regionales-centros', CatalogController::class,    'regionalesCentros', true ],
@@ -61,6 +66,12 @@ final class Router
         ['GET',    '/api/periods/{id}',              PeriodController::class,       'show',      true ],
         ['PUT',    '/api/periods/{id}',              PeriodController::class,       'update',    true ],
         ['POST',   '/api/periods/{id}/assign',       PeriodController::class,       'assignEvidences', true],
+        ['POST',   '/api/periods/{id}/prorroga',     ProrrogaController::class,     'request',       true ],
+
+        // Prórrogas
+        ['GET',    '/api/prorrogas/{id}',            ProrrogaController::class,     'show',          true ],
+        ['POST',   '/api/prorrogas/{id}/approve',    ProrrogaController::class,     'approve',       true ],
+        ['POST',   '/api/prorrogas/{id}/reject',     ProrrogaController::class,     'reject',        true ],
 
         // Evidencias (catálogo master)
         ['GET',    '/api/evidences',                 EvidenceController::class,     'index',     true ],
@@ -76,6 +87,8 @@ final class Router
         ['GET',    '/api/uploads/evidence/{id}/view',     UploadController::class,  'viewInline',true ],
         ['GET',    '/api/uploads/evidence/{id}/preview',  UploadController::class,  'previewHtml', true ],
         ['GET',    '/api/uploads/evidence/{id}/download', UploadController::class,  'download',  true ],
+        ['GET',    '/api/uploads/evidence/{id}/signature-meta', UploadController::class, 'signatureMeta', true ],
+        ['POST',   '/api/uploads/evidence/{id}/sign', UploadController::class, 'sign', true ],
 
         // Revisión
         ['GET',    '/api/reviews',                   ReviewController::class,       'index',     true ],
@@ -164,7 +177,12 @@ final class Router
                     }
                 }
                 $instance = new $ctrl();
-                call_user_func_array([$instance, $action], $args);
+                try {
+                    call_user_func_array([$instance, $action], $args);
+                } catch (\Throwable $e) {
+                    App::logError('API_UNHANDLED', $e->getMessage());
+                    App::error('Error interno del servidor.', 500);
+                }
                 return;
             }
         }

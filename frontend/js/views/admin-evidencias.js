@@ -19,6 +19,12 @@ import {
 
 let tree = [];
 
+function formatoFilterOptionsHtml() {
+  return Object.entries(EVIDENCE_FORMATS).map(([key, meta]) =>
+    `<option value="${key}">${escapeHtml(meta.label)}</option>`
+  ).join('');
+}
+
 export async function init() {
   const user = getUser();
   const view = document.body.dataset.view || '';
@@ -34,22 +40,79 @@ export async function init() {
     ${renderSectionTitle({
       title: 'Tipos de Evidencias',
       subtitle: 'Configuración jerárquica: Módulo → Subgrupo → Evidencias',
-      rightHtml: `<button class="btn" id="btn-new-evidence">${icon('plus',{size:14,color:'#fff'})}Nueva Evidencia</button>`,
     })}
+    <div class="card list-toolbar mb-3">
+      <div class="list-toolbar-body">
+        <div class="list-toolbar-fields">
+          <div class="filter-field filter-field--grow">
+            <label class="filter-label" for="search">Buscar evidencia</label>
+            <div class="input-wrap input-wrap--search">
+              <span class="input-icon">${icon('search', { size: 15, color: 'currentColor' })}</span>
+              <input class="input" id="search" type="search" autocomplete="off" placeholder="Nombre, código, descripción o subgrupo…">
+            </div>
+          </div>
+        </div>
+        <div class="list-toolbar-fields">
+          <div class="filter-field filter-field--rol">
+            <label class="filter-label" for="moduloF">Módulo</label>
+            <select class="input" id="moduloF">
+              <option value="">Todos</option>
+              <option value="GF">Gestión Financiera (GF)</option>
+              <option value="GC">Gestión Contractual (GC)</option>
+            </select>
+          </div>
+          <div class="filter-field filter-field--rol">
+            <label class="filter-label" for="formatoF">Formato</label>
+            <select class="input" id="formatoF">
+              <option value="">Todos</option>
+              ${formatoFilterOptionsHtml()}
+            </select>
+          </div>
+          <div class="filter-field filter-field--rol">
+            <label class="filter-label" for="obligatoriaF">Obligatoria</label>
+            <select class="input" id="obligatoriaF">
+              <option value="">Todas</option>
+              <option value="1">Obligatoria</option>
+              <option value="0">Opcional</option>
+            </select>
+          </div>
+          <div class="filter-field filter-field--rol">
+            <label class="filter-label" for="firmaF">Firma</label>
+            <select class="input" id="firmaF">
+              <option value="">Todas</option>
+              <option value="1">Requiere firma</option>
+              <option value="0">Sin firma</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="list-toolbar-meta">
+        <button type="button" class="btn btn-ghost btn-sm" id="evid-f-clear" disabled title="Limpiar todos los filtros">
+          ${icon('x', { size: 12 })} Limpiar filtros
+        </button>
+        <span class="filter-results" id="filter-count"></span>
+        <button type="button" class="btn" id="btn-new-evidence">${icon('plus', { size: 14, color: '#fff' })}Nueva Evidencia</button>
+      </div>
+    </div>
     <div class="grid" style="grid-template-columns:280px 1fr;gap:14px;" id="evid-grid">
       <div class="card card-pad" style="height:fit-content;" id="evid-tree"></div>
       <div class="card" style="overflow:hidden;"><div class="table-wrap" id="evid-table"></div></div>
     </div>
   `;
+  $('#search')?.addEventListener('input', apply);
+  ['moduloF', 'formatoF', 'obligatoriaF', 'firmaF'].forEach(id => {
+    $(`#${id}`)?.addEventListener('change', apply);
+  });
+  $('#evid-f-clear')?.addEventListener('click', clearFilters);
+  $('#btn-new-evidence')?.addEventListener('click', () => openEvidenceModal());
   await load();
-  $('#btn-new-evidence').addEventListener('click', () => openEvidenceModal());
 }
 
 async function load() {
   const r = await api.get('/evidences/tree');
   tree = r.data;
   renderTree();
-  renderTable(null);
+  apply();
 }
 
 let activeSubgroup = null;
@@ -81,8 +144,102 @@ function renderTree() {
   $$('.sg-btn').forEach(b => b.addEventListener('click', () => {
     activeSubgroup = activeSubgroup == b.dataset.sg ? null : parseInt(b.dataset.sg, 10);
     renderTree();
-    renderTable(activeSubgroup);
+    apply();
   }));
+}
+
+function collectEvidencias() {
+  const evidencias = [];
+  for (const m of tree) {
+    for (const s of m.subgrupos || []) {
+      if (activeSubgroup && s.id_subgrupo != activeSubgroup) continue;
+      for (const e of s.evidencias || []) {
+        evidencias.push({
+          ...e,
+          subgrupo_nombre: s.nombre,
+          modulo_codigo: m.codigo,
+          modulo_color: m.color_hex,
+        });
+      }
+    }
+  }
+  return evidencias;
+}
+
+function hasActiveFilters() {
+  return !!(
+    ($('#search')?.value || '').trim() ||
+    ($('#moduloF')?.value || '') ||
+    ($('#formatoF')?.value || '') ||
+    ($('#obligatoriaF')?.value || '') ||
+    ($('#firmaF')?.value || '')
+  );
+}
+
+function hasAnyFilter() {
+  return hasActiveFilters() || activeSubgroup !== null;
+}
+
+function updateClearButton() {
+  const btn = $('#evid-f-clear');
+  if (!btn) return;
+  btn.disabled = !hasAnyFilter();
+}
+
+function clearFilters() {
+  const search = $('#search');
+  if (search) search.value = '';
+  ['moduloF', 'formatoF', 'obligatoriaF', 'firmaF'].forEach(id => {
+    const el = $(`#${id}`);
+    if (el) el.value = '';
+  });
+  if (activeSubgroup !== null) {
+    activeSubgroup = null;
+    renderTree();
+  }
+  apply();
+}
+
+function filterEvidencias(all) {
+  const q = ($('#search')?.value || '').toLowerCase().trim();
+  const modulo = $('#moduloF')?.value || '';
+  const formato = $('#formatoF')?.value || '';
+  const obligatoria = $('#obligatoriaF')?.value || '';
+  const firma = $('#firmaF')?.value || '';
+  return all.filter(e => {
+    const matchQ = !q ||
+      (e.nombre || '').toLowerCase().includes(q) ||
+      (e.codigo || '').toLowerCase().includes(q) ||
+      (e.descripcion || '').toLowerCase().includes(q) ||
+      (e.subgrupo_nombre || '').toLowerCase().includes(q);
+    const matchMod = !modulo || normalizeModuleCode(e.modulo_codigo) === modulo;
+    const matchFmt = !formato || normalizeFormat(e.tipo_archivo) === formato;
+    const matchObl = obligatoria === '' || String(e.obligatoria) === obligatoria;
+    const matchFirma = firma === '' || String(e.requiere_firma) === firma;
+    return matchQ && matchMod && matchFmt && matchObl && matchFirma;
+  });
+}
+
+function updateFilterCount(shown) {
+  const el = $('#filter-count');
+  if (!el) return;
+  const total = collectEvidencias().length;
+  const hasFilter = hasActiveFilters();
+  if (!hasFilter) {
+    el.textContent = `${total} evidencia${total === 1 ? '' : 's'}`;
+    el.classList.remove('filter-results--active');
+    return;
+  }
+  el.textContent = `${shown} de ${total} evidencia${total === 1 ? '' : 's'}`;
+  el.classList.add('filter-results--active');
+}
+
+function apply() {
+  const all = collectEvidencias();
+  const filtered = filterEvidencias(all);
+  updateFilterCount(filtered.length);
+  updateClearButton();
+  renderTable(filtered);
 }
 
 function findModuleBySubgroup(sgId) {
@@ -117,21 +274,13 @@ function formatOptionsHtml(moduloCodigo, selected) {
   }).join('');
 }
 
-function renderTable(sgId) {
-  const evidencias = [];
-  for (const m of tree) {
-    for (const s of m.subgrupos || []) {
-      if (sgId && s.id_subgrupo != sgId) continue;
-      for (const e of s.evidencias || []) {
-        evidencias.push({ ...e, subgrupo_nombre: s.nombre, modulo_codigo: m.codigo, modulo_color: m.color_hex });
-      }
-    }
-  }
+function renderTable(evidencias) {
+  const canDelete = getUser()?.rol_label === 'Super Admin';
   $('#evid-table').innerHTML = `
     <table class="table">
-      <thead><tr>${['Evidencia','Formato','Subgrupo','Obligatoria','Acciones'].map(h => `<th>${h}</th>`).join('')}</tr></thead>
+      <thead><tr>${['Evidencia','Formato','Subgrupo','Obligatoria','Firma','Acciones'].map(h => `<th>${h}</th>`).join('')}</tr></thead>
       <tbody>
-        ${evidencias.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--c-gris4);">Sin evidencias</td></tr>` :
+        ${evidencias.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--c-gris4);">Sin evidencias</td></tr>` :
           evidencias.map(e => `
             <tr>
               <td>
@@ -141,27 +290,30 @@ function renderTable(sgId) {
               <td><span class="badge inactivo small">${escapeHtml(formatLabel(e.tipo_archivo))}</span></td>
               <td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:${e.modulo_color}15;color:${e.modulo_color};">${escapeHtml(e.modulo_codigo)} · ${escapeHtml(e.subgrupo_nombre)}</span></td>
               <td>${e.obligatoria == 1 ? `<span class="badge aprobada small">Obligatoria</span>` : `<span class="badge inactivo small">Opcional</span>`}</td>
+              <td>${e.requiere_firma == 1 ? `<span class="badge pendiente-firma small">Sí</span>` : `<span class="badge inactivo small">No</span>`}</td>
               <td><div style="display:flex;gap:5px;">
                 <button class="btn btn-ghost btn-sm" data-act="edit" data-id="${e.id_evidencia_master}">${icon('edit',{size:12})}Editar</button>
-                <button class="btn btn-danger btn-sm" data-act="del"  data-id="${e.id_evidencia_master}">${icon('trash',{size:12})}</button>
+                ${canDelete ? `<button class="btn btn-danger btn-sm" data-act="del" data-id="${e.id_evidencia_master}">${icon('trash',{size:12})}</button>` : ''}
               </div></td>
             </tr>`).join('')}
       </tbody>
     </table>
   `;
   $$('#evid-table [data-act="edit"]').forEach(b => b.addEventListener('click', () => openEvidenceModal(evidencias.find(e => e.id_evidencia_master == b.dataset.id))));
-  $$('#evid-table [data-act="del"]').forEach(b => b.addEventListener('click', async () => {
-    if (!await showConfirm({
-      title: 'Eliminar evidencia',
-      message: 'Esta acción borrará la evidencia y todas las asignaciones relacionadas. No se puede deshacer.',
-      confirmLabel: 'Eliminar',
-      cancelLabel: 'Cancelar',
-      variant: 'danger',
-    })) return;
-    await api.del('/evidences/' + b.dataset.id);
-    showToast('success', 'Listo', 'Evidencia eliminada.');
-    load();
-  }));
+  if (canDelete) {
+    $$('#evid-table [data-act="del"]').forEach(b => b.addEventListener('click', async () => {
+      if (!await showConfirm({
+        title: 'Eliminar evidencia',
+        message: 'Esta acción borrará la evidencia y todas las asignaciones relacionadas. No se puede deshacer.',
+        confirmLabel: 'Eliminar',
+        cancelLabel: 'Cancelar',
+        variant: 'danger',
+      })) return;
+      await api.del('/evidences/' + b.dataset.id);
+      showToast('success', 'Listo', 'Evidencia eliminada.');
+      load();
+    }));
+  }
 }
 
 function openEvidenceModal(ev) {
@@ -208,6 +360,13 @@ function openEvidenceModal(ev) {
           </div>
           <div><label class="label">Orden</label><input class="input" type="number" name="orden" value="${ev?.orden || 0}"></div>
         </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--c-gris2);border-radius:8px;background:var(--c-gris0);">
+          <input type="checkbox" id="ev-requiere-firma" name="requiere_firma" value="1" style="margin-top:2px;accent-color:var(--c-azul);" ${ev?.requiere_firma == 1 ? 'checked' : ''}>
+          <span>
+            <span style="display:block;font-size:13px;font-weight:600;color:var(--c-azul);">Esta evidencia se firma</span>
+            <span style="display:block;font-size:11px;color:var(--c-gris5);margin-top:2px;">Marque si el documento debe incluir firma del contratista o responsable.</span>
+          </span>
+        </label>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button type="button" class="btn btn-sec" data-cancel>Cancelar</button>
           <button class="btn" type="submit">${icon('check',{size:12,color:'#fff'})}${isEdit ? 'Guardar' : 'Crear'}</button>
@@ -265,6 +424,7 @@ function openEvidenceModal(ev) {
         e.preventDefault();
         const fd = new FormData(e.target);
         const data = Object.fromEntries(fd.entries());
+        data.requiere_firma = modal.querySelector('#ev-requiere-firma')?.checked ? '1' : '0';
         try {
           if (isEdit) await api.put('/evidences/' + ev.id_evidencia_master, data);
           else        await api.post('/evidences', data);

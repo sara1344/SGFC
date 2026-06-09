@@ -245,7 +245,7 @@ export async function init() {
     <div class="tabs" id="tabs">
       <button class="tab active" data-tab="Pendiente revisión">Pendiente revisión <span class="count" id="c-pen">0</span></button>
       <button class="tab" data-tab="Rechazada">Rechazadas <span class="count" id="c-rec">0</span></button>
-      <button class="tab" data-tab="Aprobada">Aprobadas <span class="count" id="c-apr">0</span></button>
+      <button class="tab" data-tab="Aprobada">Aprobadas <span class="count" id="c-apr" title="Aprobadas hoy">0</span></button>
     </div>
     <div id="list"></div>
   `;
@@ -315,13 +315,23 @@ async function load() {
 }
 
 async function refreshTabCounts() {
-  const states = ['Pendiente revisión', 'Rechazada', 'Aprobada'];
-  const ids = ['c-pen', 'c-rec', 'c-apr'];
-  await Promise.all(states.map(async (est, i) => {
-    const c = await api.get('/reviews?estado=' + encodeURIComponent(est), { silent: true });
-    const el = $('#' + ids[i]);
-    if (el) el.textContent = (c.data || []).length;
-  }));
+  try {
+    const r = await api.get('/reviews?counts=1', { silent: true });
+    const c = r.data || {};
+    const map = { 'c-pen': 'Pendiente revisión', 'c-rec': 'Rechazada', 'c-apr': 'Aprobada' };
+    for (const [id, key] of Object.entries(map)) {
+      const el = $('#' + id);
+      if (el) el.textContent = c[key] ?? 0;
+    }
+  } catch {
+    const states = ['Pendiente revisión', 'Rechazada', 'Aprobada'];
+    const ids = ['c-pen', 'c-rec', 'c-apr'];
+    await Promise.all(states.map(async (est, i) => {
+      const res = await api.get('/reviews?estado=' + encodeURIComponent(est), { silent: true });
+      const el = $('#' + ids[i]);
+      if (el) el.textContent = (res.data || []).length;
+    }));
+  }
 }
 
 function renderGroups() {

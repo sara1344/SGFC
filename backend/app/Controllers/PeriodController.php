@@ -9,6 +9,7 @@ use App\Models\UnifiedPdf;
 use App\Services\AuditService;
 use App\Services\CalendarConfigService;
 use App\Services\NotificationService;
+use App\Services\PeriodExtensionService;
 
 final class PeriodController extends Controller
 {
@@ -73,6 +74,7 @@ final class PeriodController extends Controller
             'tiene_asignacion'      => $hasAssignment,
             'puede_editar_evidencias'=> !$locked && $editWindow['activa'],
             'ventana_edicion'       => $editWindow,
+            'ventana_carga'         => PeriodExtensionService::getUploadWindow($id),
         ]);
     }
 

@@ -102,6 +102,9 @@ const ICONS = {
   calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   building: '<path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h.01M9 12h.01M9 15h.01M9 18h.01M13 13h.01M13 16h.01M13 19h.01"/>',
   activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  mapPin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  messageCircle: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
 };
 
 export function icon(name, { size = 18, color = 'currentColor', strokeWidth = 2 } = {}) {
@@ -132,6 +135,40 @@ function resolveActiveMenuId(menu, activeId) {
 
   return activeId;
 }
+
+/* ==========================================================================
+   FOOTER INSTITUCIONAL
+   ========================================================================== */
+export function renderFooter() {
+  const photoSrc = resolveFrontendPath('/images/footer.png');
+  const photoWarmSrc = resolveFrontendPath('/images/footer-calido.png');
+
+  return `
+    <footer class="sgfc-footer" id="sgfc-footer">
+      <div class="sgfc-footer-mesh sgfc-footer-mesh--tl" aria-hidden="true"></div>
+      <div class="sgfc-footer-mesh sgfc-footer-mesh--br" aria-hidden="true"></div>
+      <div class="sgfc-footer-inner">
+        <div class="sgfc-footer-photo">
+          <img class="sgfc-footer-photo-img sgfc-footer-photo-img--default" src="${photoSrc}" alt="Equipo institucional SENA" loading="lazy" width="270" height="auto">
+          <img class="sgfc-footer-photo-img sgfc-footer-photo-img--warm" src="${photoWarmSrc}" alt="Equipo institucional SENA — modo descanso" loading="lazy" width="270" height="auto">
+        </div>
+        <div class="sgfc-footer-brand">
+          <p class="sgfc-footer-tagline">FORMANDO EL FUTURO DE COLOMBIA</p>
+          <p class="sgfc-footer-sub">ACOMPAÑAMIENTO Y PROFESIONALISMO</p>
+          <p class="sgfc-footer-pie" id="footer-pie">SENA Regional Caldas — CPIC — Carlos/Sara/Nicol</p>
+          <div class="sgfc-footer-actions">
+            <a href="${resolveFrontendPath('/docs/manual-usuario.pdf')}" class="sgfc-footer-link" id="footer-manual" target="_blank" rel="noopener noreferrer">
+              <span class="sgfc-footer-link-icon">${icon('fileText', { size: 18, color: '#fff' })}</span>
+              <span>MANUAL DE USUARIO</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>`;
+}
+
+/** Reservado para futura personalización del footer. */
+export async function initFooter() {}
 
 /* ==========================================================================
    LAYOUT (Sidebar + Navbar + main)
@@ -200,10 +237,15 @@ export async function renderLayout({ rootSelector, activeId, breadcrumb = [] }) 
             <span>Cerrar sesión</span>
           </button>
         </header>
-        <main id="view-content"><div class="loader-screen"><div class="loader"></div></div></main>
+        <main class="layout-scroll">
+          <div id="view-content"><div class="loader-screen"><div class="loader"></div></div></div>
+          ${renderFooter()}
+        </main>
       </div>
     </div>
   `;
+
+  initFooter();
 
   // Listeners
   $$('.sidebar-item').forEach(b =>

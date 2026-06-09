@@ -1,7 +1,7 @@
 /**
  * Vista: Contratista → Historial.
  */
-import { api, API_BASE } from '../api.js';
+import { api, API_BASE, resolveFrontendPath } from '../api.js';
 import { $, $$, escapeHtml, fmtDate } from '../utils.js';
 import { renderLayout, renderSectionTitle, icon, renderProgress } from '../components.js';
 
@@ -40,7 +40,7 @@ export async function init() {
     box.innerHTML = `
       <div style="border-top:1px solid var(--c-gris2);overflow-x:auto;">
         <table class="table">
-          <thead><tr>${['Período','Estado','Avance','PDF unificado','Acción'].map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <thead><tr>${['Período','Estado','Evidencias','Avance','PDF unificado','Acción'].map(h => `<th>${h}</th>`).join('')}</tr></thead>
           <tbody>
             ${r.data.map(p => {
               const pdf = pdfMap.get(p.id_periodo);
@@ -49,9 +49,15 @@ export async function init() {
                 <tr>
                   <td style="font-weight:600;">${escapeHtml(p.nombre_periodo)}</td>
                   <td><span class="badge ${p.estado === 'Firmado' ? 'firmado' : p.estado === 'Pendiente firma' ? 'pendiente-firma' : p.estado === 'Activo' ? 'activo' : 'bloqueado'} small">${escapeHtml(p.estado)}</span></td>
+                  <td>${Number(p.evidencias_count || 0) > 0 ? `<strong>${p.evidencias_count}</strong> asignadas` : '<span style="color:var(--c-gris4);">Sin asignar</span>'}</td>
                   <td style="min-width:140px;">${renderProgress(parseInt(p.avance, 10) || 0)}</td>
                   <td>${pdf ? `<span class="badge ${final ? 'firmado' : 'pendiente-firma'} small">${escapeHtml(pdf.estado)}</span>` : '<span style="color:var(--c-gris3);">—</span>'}</td>
-                  <td>${final ? `<a class="btn btn-sm" href="${API_BASE}/pdf/final/${pdf.id_pdf}/download" target="_blank">${icon('download',{size:12,color:'#fff'})}PDF</a>` : ''}</td>
+                  <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${Number(p.evidencias_count || 0) > 0 && p.estado !== 'Bloqueado' && p.estado !== 'Firmado'
+                      ? `<a class="btn btn-sec btn-sm" href="${resolveFrontendPath('/views/contratista-cargar-evidencias.html?periodo=' + p.id_periodo)}">${icon('upload',{size:12})}Cargar</a>`
+                      : ''}
+                    ${final ? `<a class="btn btn-sm" href="${API_BASE}/pdf/final/${pdf.id_pdf}/download" target="_blank">${icon('download',{size:12,color:'#fff'})}PDF</a>` : ''}
+                  </td>
                 </tr>`;
             }).join('')}
           </tbody>

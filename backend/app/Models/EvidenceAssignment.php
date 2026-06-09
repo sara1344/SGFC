@@ -13,7 +13,7 @@ final class EvidenceAssignment extends Model
     {
         $sql = "SELECT a.id_asignacion, a.obligatoria AS asign_obligatoria, a.orden AS asign_orden,
                        em.id_evidencia_master, em.codigo, em.nombre, em.descripcion, em.obligatoria,
-                       em.tipo_archivo, em.tamano_max_mb, em.orden AS evid_orden,
+                       em.requiere_firma, em.tipo_archivo, em.tamano_max_mb, em.orden AS evid_orden,
                        s.id_subgrupo, s.codigo AS subgrupo_codigo, s.nombre AS subgrupo_nombre, s.icono,
                        m.id_modulo, m.codigo AS modulo_codigo, m.nombre AS modulo_nombre, m.color_hex AS modulo_color,
                        (SELECT id_upload FROM evidencias_uploads u
@@ -34,7 +34,10 @@ final class EvidenceAssignment extends Model
                           ORDER BY r.id_revision DESC LIMIT 1) AS ultimo_comentario,
                        (SELECT version FROM evidencias_uploads u
                           WHERE u.id_asignacion = a.id_asignacion
-                          ORDER BY u.version DESC LIMIT 1) AS version
+                          ORDER BY u.version DESC LIMIT 1) AS version,
+                       (SELECT u.firmado_contratista FROM evidencias_uploads u
+                          WHERE u.id_asignacion = a.id_asignacion
+                          ORDER BY u.version DESC, u.id_upload DESC LIMIT 1) AS firmado_contratista
                 FROM evidencias_asignadas a
                 JOIN evidencias_master em ON em.id_evidencia_master = a.id_evidencia_master
                 JOIN subgrupos s ON s.id_subgrupo = em.id_subgrupo

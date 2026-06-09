@@ -7,7 +7,7 @@
  */
 import { api } from '../api.js';
 import { $, $$, escapeHtml, renderAvatar } from '../utils.js';
-import { renderLayout, renderSectionTitle, renderKpi, icon, showToast, openModal, showConfirm } from '../components.js';
+import { renderLayout, renderSectionTitle, icon, showToast, openModal, showConfirm } from '../components.js';
 import { getUser } from '../auth.js';
 
 let users = [];
@@ -22,7 +22,6 @@ export async function init() {
       title: 'Gestión de Usuarios',
       subtitle: 'Contratistas y administrativos de centro · usuario generado por el sistema',
     })}
-    <div class="grid grid-4 mb-3" id="kpis"></div>
     <div class="card list-toolbar mb-3">
       <div class="list-toolbar-fields">
         <div class="filter-field filter-field--grow">
@@ -70,31 +69,7 @@ async function loadRegionales() {
 async function load() {
   const r = await api.get('/users');
   users = r.data;
-  renderKpis();
   apply();
-}
-
-function renderKpis() {
-  const me = getUser();
-  const isCenter = me?.rol_label === 'Administrativo de Centro';
-  const total = users.length;
-  const cont  = users.filter(u => u.nombre_perfil === 'contratista').length;
-  const cent  = users.filter(u => u.nombre_perfil === 'administrativo_centro').length;
-  const supa  = users.filter(u => u.nombre_perfil === 'administrador').length;
-  if (isCenter) {
-    $('#kpis').innerHTML = [
-      renderKpi({ label: 'Contratistas del centro', value: total, iconName: 'users',     color: '#00304D' }),
-      renderKpi({ label: 'Activos',                 value: users.filter(u => parseInt(u.activo, 10) === 1).length, iconName: 'briefcase', color: '#39A900' }),
-      renderKpi({ label: 'Con contrato activo',     value: users.filter(u => u.contrato_activo).length, iconName: 'fileText',  color: '#71277A' }),
-    ].join('');
-    return;
-  }
-  $('#kpis').innerHTML = [
-    renderKpi({ label: 'Total usuarios',  value: total, iconName: 'users',       color: '#00304D' }),
-    renderKpi({ label: 'Contratistas',    value: cont,  iconName: 'briefcase',   color: '#39A900' }),
-    renderKpi({ label: 'Admin. de centro', value: cent, iconName: 'shield',      color: '#71277A' }),
-    renderKpi({ label: 'Super admins',    value: supa,  iconName: 'shield',      color: '#0891B2' }),
-  ].join('');
 }
 
 function apply() {

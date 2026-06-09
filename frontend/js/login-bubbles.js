@@ -12,27 +12,37 @@ const MAX_SPEED = 0.75;
 const FRICTION = 0.97;
 const DRIFT = 0.12;
 
+const DEFAULT_CANVAS_SELECTOR = '.bubbles-canvas, .login-bubbles-canvas';
+
 /**
- * @param {HTMLElement} panel — .login-panel-right
+ * @param {HTMLElement} panel — contenedor del canvas (p. ej. panel de login o sidebar-nav)
+ * @param {{ canvasSelector?: string, bubbleCount?: number }} [options]
  */
-export function initLoginBubbles(panel) {
-  const canvases = panel.querySelectorAll('.login-bubbles-canvas');
+export function initBubbles(panel, options = {}) {
+  const canvasSelector = options.canvasSelector ?? DEFAULT_CANVAS_SELECTOR;
+  const bubbleCount = options.bubbleCount ?? BUBBLE_COUNT;
+  const canvases = panel.querySelectorAll(canvasSelector);
   if (!canvases.length) return () => {};
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    canvases.forEach(drawStatic);
+    canvases.forEach((c) => drawStatic(c, bubbleCount));
     return () => {};
   }
 
-  const cleanups = [...canvases].map((canvas) => initCanvasBubbles(canvas, panel));
+  const cleanups = [...canvases].map((canvas) => initCanvasBubbles(canvas, panel, bubbleCount));
   return () => cleanups.forEach((fn) => fn());
+}
+
+/** @param {HTMLElement} panel — .login-panel-right */
+export function initLoginBubbles(panel) {
+  return initBubbles(panel);
 }
 
 /**
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLElement} panel
  */
-function initCanvasBubbles(canvas, panel) {
+function initCanvasBubbles(canvas, panel, bubbleCount = BUBBLE_COUNT) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return () => {};
 
@@ -54,7 +64,7 @@ function initCanvasBubbles(canvas, panel) {
 
   function createBubbles() {
     bubbles = [];
-    for (let i = 0; i < BUBBLE_COUNT; i++) {
+    for (let i = 0; i < bubbleCount; i++) {
       const r = 4 + Math.random() * 10;
       bubbles.push({
         x: size.w * (0.12 + Math.random() * 0.88),
@@ -153,7 +163,7 @@ function initCanvasBubbles(canvas, panel) {
   };
 }
 
-function drawStatic(canvas) {
+function drawStatic(canvas, bubbleCount = BUBBLE_COUNT) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const rect = canvas.getBoundingClientRect();
@@ -163,7 +173,7 @@ function drawStatic(canvas) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const w = rect.width;
   const h = rect.height;
-  for (let i = 0; i < BUBBLE_COUNT; i++) {
+  for (let i = 0; i < bubbleCount; i++) {
     const nx = 0.15 + (i * 17 % 85) / 100;
     const ny = 0.15 + (i * 23 % 85) / 100;
     const r = 4 + (i % 11);

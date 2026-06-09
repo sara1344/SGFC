@@ -36,6 +36,7 @@ final class EvidenceController extends Controller
             'nombre'         => $data['nombre'],
             'descripcion'    => $data['descripcion']  ?? null,
             'obligatoria'    => (int) ($data['obligatoria'] ?? 1),
+            'requiere_firma' => (int) (!empty($data['requiere_firma'])),
             'orden'          => (int) ($data['orden'] ?? 0),
             'tipo_archivo'   => $format,
             'tamano_max_mb'  => (int) ($data['tamano_max_mb'] ?? 10),
@@ -50,7 +51,10 @@ final class EvidenceController extends Controller
         $data = $this->input();
         $m = new Evidence();
         if (!$m->find($id)) { $this->error('Evidencia no encontrada.', 404); }
-        $patch = array_intersect_key($data, array_flip(['id_subgrupo','codigo','nombre','descripcion','obligatoria','orden','activo','tipo_archivo','tamano_max_mb']));
+        $patch = array_intersect_key($data, array_flip(['id_subgrupo','codigo','nombre','descripcion','obligatoria','requiere_firma','orden','activo','tipo_archivo','tamano_max_mb']));
+        if (array_key_exists('requiere_firma', $data)) {
+            $patch['requiere_firma'] = (int) (!empty($data['requiere_firma']));
+        }
         if (isset($patch['tipo_archivo']) || isset($patch['id_subgrupo'])) {
             $patch['tipo_archivo'] = $this->resolveEvidenceFormat(array_merge($m->find($id) ?: [], $patch));
         }

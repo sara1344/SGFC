@@ -5,6 +5,7 @@ use App\Config\Env;
 use App\Services\AuthService;
 use App\Services\AuditService;
 use App\Services\LoginAttemptService;
+use App\Services\PasswordResetService;
 use App\Services\RecaptchaService;
 use App\Services\SecurityConfigService;
 use App\Middlewares\AuthMiddleware;
@@ -49,30 +50,7 @@ final class AuthController extends Controller
             $this->error($blockedMsg, 429);
         }
 
-        $siteKey = trim((string) Env::get('RECAPTCHA_SITE_KEY', ''));
-        $secret  = trim((string) Env::get('RECAPTCHA_SECRET_KEY', ''));
-        $hasSite = $siteKey !== '';
-        $hasSecret = $secret !== '';
-        if ($hasSite !== $hasSecret) {
-            $this->error(
-                'Configuración reCAPTCHA incompleta en el servidor (defina SITE_KEY y SECRET juntas).',
-                503
-            );
-        }
-
-        if (SecurityConfigService::isRecaptchaRequired()) {
-            $token = trim((string) ($data['recaptcha_token'] ?? $data['g-recaptcha-response'] ?? ''));
-            if ($token === '') {
-                $this->error('Complete la verificación reCAPTCHA.', 422);
-            }
-            if (!RecaptchaService::verify($secret, $token)) {
-                AuditService::log('login_failed', 'personas', null, [
-                    'identificador' => $loginField,
-                    'reason'        => 'recaptcha_failed',
-                ]);
-                $this->error('Verificación de seguridad no válida. Intente de nuevo.', 403);
-            }
-        }
+        $this->enforceRecaptchaIfRequired($data, $loginField, 'login_failed');
 
         $payload = AuthService::attemptLogin($loginField, $password);
         if (!$payload) {
@@ -109,5 +87,98 @@ final class AuthController extends Controller
             $_SESSION['user'] = $user;
         }
         $this->success(['user' => $user]);
+    }
+
+    /** GET /api/auth/signature — imagen de firma guardada del usuario actual */
+    public function signature(): void
+    {
+        $user = AuthMiddleware::check();
+        $img = (new User())->getSignatureImage((int) $user['id']);
+        if ($img === null) {
+            $this->error('No tiene una firma registrada.', 404);
+        }
+        $this->success(['imagen_b64' => $img]);
+    }
+
+    public function forgotPassword(): void
+    {
+        $data = $this->input();
+        $usuario = trim((string) ($data['usuario'] ?? ''));
+        $correo = trim((string) ($data['correo'] ?? ''));
+
+        $this->validate(
+            ['usuario' => $usuario, 'correo' => $correo],
+            ['usuario' => 'required|min:3', 'correo' => 'required|email']
+        );
+
+        $this->enforceRecaptchaIfRequired($data, $usuario . '|' . $correo, 'password_reset_recaptcha_failed');
+
+        $result = PasswordResetService::requestReset($usuario, $correo);
+        if (!$result['ok']) {
+            $this->error($result['message'], 422);
+        }
+        $this->success(['sent' => $result['sent'] ?? null], $result['message']);
+    }
+
+    public function validateResetToken(): void
+    {
+        $token = trim((string) ($_GET['token'] ?? $this->input()['token'] ?? ''));
+        $result = PasswordResetService::validateToken($token);
+        if (!$result['ok']) {
+            $this->error($result['message'], 400);
+        }
+        $this->success(['user' => $result['user'] ?? null], $result['message']);
+    }
+
+    public function resetPassword(): void
+    {
+        $data = $this->input();
+        $token = trim((string) ($data['token'] ?? ''));
+        $password = (string) ($data['password'] ?? '');
+        $confirm = (string) ($data['password_confirm'] ?? '');
+
+        $this->validate(
+            ['token' => $token, 'password' => $password],
+            ['token' => 'required|min:32', 'password' => 'required|min:4']
+        );
+
+        $result = PasswordResetService::resetPassword($token, $password, $confirm);
+        if (!$result['ok']) {
+            $this->error($result['message'], 422);
+        }
+        $this->success(null, $result['message']);
+    }
+
+    /** @param array<string,mixed> $data */
+    private function enforceRecaptchaIfRequired(array $data, ?string $auditIdent = null, string $auditEvent = 'recaptcha_failed'): void
+    {
+        $siteKey = trim((string) Env::get('RECAPTCHA_SITE_KEY', ''));
+        $secret  = trim((string) Env::get('RECAPTCHA_SECRET_KEY', ''));
+        $hasSite = $siteKey !== '';
+        $hasSecret = $secret !== '';
+        if ($hasSite !== $hasSecret) {
+            $this->error(
+                'Configuración reCAPTCHA incompleta en el servidor (defina SITE_KEY y SECRET juntas).',
+                503
+            );
+        }
+
+        if (!SecurityConfigService::isRecaptchaRequired()) {
+            return;
+        }
+
+        $token = trim((string) ($data['recaptcha_token'] ?? $data['g-recaptcha-response'] ?? ''));
+        if ($token === '') {
+            $this->error('Complete la verificación reCAPTCHA.', 422);
+        }
+        if (!RecaptchaService::verify($secret, $token)) {
+            if ($auditIdent !== null && $auditIdent !== '') {
+                AuditService::log($auditEvent, 'personas', null, [
+                    'identificador' => $auditIdent,
+                    'reason'        => 'recaptcha_failed',
+                ]);
+            }
+            $this->error('Verificación de seguridad no válida. Intente de nuevo.', 403);
+        }
     }
 }

@@ -22,6 +22,17 @@ final class User extends Model
         return $this->one($sql, [':u' => $usuario]);
     }
 
+    public function findByLoginAndEmail(string $usuario, string $correo): ?array
+    {
+        $sql = "SELECT p.*
+                FROM personas p
+                WHERE LOWER(TRIM(p.usuario)) = LOWER(TRIM(:u))
+                  AND LOWER(TRIM(p.correo)) = LOWER(TRIM(:e))
+                  AND COALESCE(p.activo, 1) = 1
+                LIMIT 1";
+        return $this->one($sql, [':u' => trim($usuario), ':e' => trim($correo)]);
+    }
+
     public function listAll(?string $search = null, ?string $role = null, ?string $estado = null, ?int $idCentro = null): array
     {
         $sql = "SELECT p.id_persona, p.cedula, p.nombres, p.Apellidos, p.correo, p.usuario, p.activo,

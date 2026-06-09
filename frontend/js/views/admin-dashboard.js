@@ -1,14 +1,12 @@
 /**
  * Vista: Administrativo → Dashboard
- *   - KPIs (semáforo)
  *   - Tabla tipo Excel/checklist por contratista x evidencias x estado
  *   - Filtros + exportar a Excel
  */
 
 import { api, API_BASE } from '../api.js';
 import { $, escapeHtml, renderAvatar } from '../utils.js';
-import { renderLayout, renderKpi, renderSectionTitle, icon, showToast } from '../components.js';
-import { getUser } from '../auth.js';
+import { renderLayout, renderSectionTitle, icon, showToast } from '../components.js';
 import { fetchAvanceRegionales, renderAvanceRegionalesWidget, bindAvanceRegionalesWidget } from '../dashboard-avance-regionales.js';
 
 export async function init() {
@@ -28,7 +26,6 @@ export async function init() {
     return;
   }
 
-  const k = data.kpis || {};
   const rows = data.checklist || [];
 
   // Agrupar filas por contratista para tabla tipo Excel
@@ -45,35 +42,12 @@ export async function init() {
 
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const ahora = new Date();
-  const me = getUser();
-  const centroKpi = me?.rol_label === 'Administrativo de Centro'
-    ? renderKpi({
-        label: 'Centro',
-        value: me?.centro_nombre || '—',
-        iconName: 'building',
-        color: '#0891B2',
-        sub: me?.regional_nombre || '',
-        wide: true,
-        textValue: true,
-      })
-    : '';
 
   root.innerHTML = `
     ${renderSectionTitle({
       title: 'Inicio',
       subtitle: `Seguimiento general — ${meses[ahora.getMonth()]} ${ahora.getFullYear()}`,
     })}
-
-    <div class="grid grid-kpis mb-4">
-      ${centroKpi}
-      ${renderKpi({ label: 'Contratistas activos',  value: k.contratistas_activos || 0, iconName: 'users',         color: '#00304D' })}
-      ${renderKpi({ label: 'Evidencias aprobadas',  value: k.aprobadas || 0,            iconName: 'checkCircle',   color: '#39A900' })}
-      ${renderKpi({ label: 'Pendiente revisión',    value: k.pendiente_revision || 0,   iconName: 'helpCircle',    color: '#CA8A04' })}
-      ${renderKpi({ label: 'Pendiente entrega',     value: k.pendiente_entrega || 0,    iconName: 'alertTriangle', color: '#EA580C' })}
-      ${renderKpi({ label: 'Rechazadas',            value: k.rechazadas || 0,           iconName: 'xCircle',       color: '#DC2626' })}
-      ${renderKpi({ label: 'Periodos firmados',     value: k.periodos_firmados || 0,    iconName: 'fileSignature', color: '#1D4ED8' })}
-      ${renderKpi({ label: 'Pendiente firma',       value: k.pendiente_firma || 0,      iconName: 'fileStack',     color: '#0891B2' })}
-    </div>
 
     ${renderAvanceRegionalesWidget(avanceRegionales)}
 

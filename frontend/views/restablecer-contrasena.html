@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SGFC — Nueva contraseña | SENA</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/login.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+  </head>
+  <body data-view="restablecer-contrasena">
+    <div class="login-layout">
+      <div class="login-panel-left">
+        <div class="content">
+          <div class="sgfc-logo dark">
+            <img
+              class="logo-sena"
+              src="../images/logo-login.png"
+              alt="Logo SENA"
+            />
+            <div class="sep"></div>
+            <div class="text-block">
+              <div>
+                <span class="brand">SGFC</span><span class="tag">SENA</span>
+              </div>
+            </div>
+          </div>
+          <h1>Sistema de Gestión<br />Financiera y<br />Contractual</h1>
+          <p class="lead">
+            Plataforma institucional para la gestión, validación y seguimiento
+            documental de contratistas del SENA.
+          </p>
+        </div>
+        <div class="login-footer">
+          <div>SENA — CPIC</div>
+          <div class="login-footer-credits">Sara / Carlos / Nicol</div>
+        </div>
+      </div>
+
+      <div class="login-panel-right" id="login-panel-right">
+        <canvas
+          class="login-bubbles-canvas login-bubbles-canvas--br"
+          aria-hidden="true"
+        ></canvas>
+        <div class="login-form fade-up">
+          <div class="login-form-card">
+            <a
+              href="login.html"
+              class="login-back-link"
+              data-login-transition="to-login"
+              >Volver al inicio de sesión →</a
+            >
+            <h2>Restablecer contraseña</h2>
+            <p class="sub" id="user-hint">Verificando enlace…</p>
+
+            <div id="error-box" class="alert hidden">
+            <span id="error-msg">Mensaje</span>
+          </div>
+
+          <div id="success-box" class="alert alert-success hidden">
+            <span id="success-msg">Mensaje</span>
+          </div>
+
+          <form id="reset-form" class="hidden" autocomplete="off">
+            <div>
+              <label class="label" for="pwd">Nueva contraseña</label>
+              <div class="pwd-wrap">
+                <input
+                  type="password"
+                  id="pwd"
+                  class="input"
+                  placeholder="••••••••"
+                  autocomplete="new-password"
+                  required
+                  minlength="4"
+                />
+                <button
+                  type="button"
+                  class="toggle-pwd"
+                  id="toggle-pwd"
+                  aria-label="Mostrar contraseña"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="label" for="pwd2">Confirmar contraseña</label>
+              <div class="pwd-wrap">
+                <input
+                  type="password"
+                  id="pwd2"
+                  class="input"
+                  placeholder="••••••••"
+                  autocomplete="new-password"
+                  required
+                  minlength="4"
+                />
+              </div>
+            </div>
+
+            <button class="btn btn-block btn-lg" id="submit-btn" type="submit">
+              <span id="btn-label">Guardar nueva contraseña</span>
+            </button>
+          </form>
+
+            <p id="invalid-actions" class="login-reset-invalid hidden">
+              <a href="olvide-contrasena.html" class="login-forgot-link"
+                >Solicitar un nuevo enlace</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sgfc-footer-mount"></div>
+
+    <script type="module">
+      import { api, resolveFrontendPath } from "../js/api.js";
+      import { renderFooter, initFooter } from "../js/components.js";
+      import { initAccessibility } from "../js/accessibility.js";
+      import { initLoginBubbles } from "../js/login-bubbles.js";
+      import { bindLoginPanelTransitionLinks } from "../js/login-panel-transition.js";
+
+      bindLoginPanelTransitionLinks();
+      initAccessibility();
+      initLoginBubbles(document.getElementById("login-panel-right"));
+
+      const $footerMount = document.getElementById("sgfc-footer-mount");
+      if ($footerMount) {
+        $footerMount.outerHTML = renderFooter();
+        initFooter();
+      }
+
+      const params = new URLSearchParams(location.search);
+      const token = params.get("token")?.trim() || "";
+
+      const $err = document.getElementById("error-box");
+      const $ok = document.getElementById("success-box");
+      const $errMsg = document.getElementById("error-msg");
+      const $okMsg = document.getElementById("success-msg");
+      const $form = document.getElementById("reset-form");
+      const $hint = document.getElementById("user-hint");
+      const $invalid = document.getElementById("invalid-actions");
+      const $btn = document.getElementById("submit-btn");
+      const $lbl = document.getElementById("btn-label");
+
+      function showError(msg) {
+        $ok.classList.add("hidden");
+        $errMsg.textContent = msg;
+        $err.classList.remove("hidden");
+      }
+
+      function showSuccess(msg) {
+        $form.classList.add("hidden");
+        $err.classList.add("hidden");
+        $okMsg.textContent = msg;
+        $ok.classList.remove("hidden");
+        $hint.textContent = "Redirigiendo al inicio de sesión…";
+        setTimeout(() => {
+          location.href = resolveFrontendPath("/views/login.html");
+        }, 2800);
+      }
+
+      document.getElementById("toggle-pwd")?.addEventListener("click", () => {
+        const $p = document.getElementById("pwd");
+        $p.type = $p.type === "password" ? "text" : "password";
+      });
+
+      async function init() {
+        if (!token) {
+          $hint.textContent = "Enlace inválido";
+          showError(
+            "Falta el token en el enlace. Use el correo que recibió o solicite uno nuevo.",
+          );
+          $invalid.classList.remove("hidden");
+          return;
+        }
+
+        try {
+          const r = await api.get(
+            `/auth/reset-password/validate?token=${encodeURIComponent(token)}`,
+            { silent: true },
+          );
+          const u = r?.data?.user;
+          $hint.textContent = u?.nombre
+            ? `Usuario: ${u.usuario} · ${u.nombre}`
+            : `Usuario: ${u?.usuario || "—"}`;
+          $form.classList.remove("hidden");
+        } catch (err) {
+          $hint.textContent = "Enlace no válido";
+          showError(
+            err.message ||
+              "El enlace expiró o ya fue utilizado. Solicite uno nuevo.",
+          );
+          $invalid.classList.remove("hidden");
+        }
+      }
+
+      $form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const password = document.getElementById("pwd").value;
+        const password_confirm = document.getElementById("pwd2").value;
+        if (password !== password_confirm) {
+          return showError("Las contraseñas no coinciden.");
+        }
+
+        $btn.disabled = true;
+        $lbl.textContent = "Guardando…";
+        try {
+          const res = await api.post(
+            "/auth/reset-password",
+            { token, password, password_confirm },
+            { silent: true },
+          );
+          showSuccess(res.message || "Contraseña actualizada correctamente.");
+        } catch (err) {
+          showError(err.message || "No se pudo actualizar la contraseña.");
+          $btn.disabled = false;
+          $lbl.textContent = "Guardar nueva contraseña";
+        }
+      });
+
+      init();
+    </script>
+  </body>
+</html>

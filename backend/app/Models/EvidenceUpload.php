@@ -9,7 +9,8 @@ final class EvidenceUpload extends Model
     public function detail(int $id): ?array
     {
         $sql = "SELECT u.*, a.id_periodo,
-                       em.codigo AS evidencia_codigo, em.nombre AS evidencia_nombre,
+                       em.codigo AS evidencia_codigo, em.nombre AS evidencia_nombre, em.tipo_archivo,
+                       em.requiere_firma,
                        s.nombre AS subgrupo_nombre, m.codigo AS modulo_codigo,
                        per.id_contrato, per.nombre_periodo,
                        p.nombres, p.Apellidos, p.correo, p.id_persona AS contratista_id
@@ -24,8 +25,15 @@ final class EvidenceUpload extends Model
         return $this->one($sql, [':id' => $id]);
     }
 
-    public function listByEstado(string $estado, ?int $contratoId = null, ?int $contratistaId = null, ?string $modulo = null, ?int $idCentro = null): array
-    {
+    public function listByEstado(
+        string $estado,
+        ?int $contratoId = null,
+        ?int $contratistaId = null,
+        ?string $modulo = null,
+        ?int $idCentro = null,
+        bool $soloHoy = false
+    ): array {
+        [$where, $params] = $this->revisionEstadoFilters($estado, $contratoId, $contratistaId, $modulo, $idCentro, $soloHoy);
         $sql = "SELECT u.id_upload, u.estado, u.creado_en AS fecha, u.version,
                        u.mime_type, u.nombre_original, em.tipo_archivo,
                        em.codigo AS evidencia_codigo, em.nombre AS evidencia_nombre,
@@ -41,7 +49,50 @@ final class EvidenceUpload extends Model
                 JOIN periodos per ON per.id_periodo = a.id_periodo
                 JOIN contratos c ON c.id_contrato = per.id_contrato
                 JOIN personas p ON p.id_persona = u.id_persona
-                WHERE u.estado = :e
+                {$where}
+                ORDER BY u.creado_en DESC";
+        return $this->query($sql, $params);
+    }
+
+    /** Contadores de las pestañas en Revisión (última versión por asignación). */
+    public function revisionTabCounts(?int $idCentro = null): array
+    {
+        return [
+            'Pendiente revisión' => $this->countByEstadoForTabs('Pendiente revisión', $idCentro),
+            'Rechazada'          => $this->countByEstadoForTabs('Rechazada', $idCentro),
+            'Aprobada'           => $this->countByEstadoForTabs('Aprobada', $idCentro, true),
+        ];
+    }
+
+    private function countByEstadoForTabs(string $estado, ?int $idCentro, bool $soloHoy = false): int
+    {
+        [$where, $params] = $this->revisionEstadoFilters($estado, null, null, null, $idCentro, $soloHoy);
+        $row = $this->one("SELECT COUNT(*) AS total FROM evidencias_uploads u
+                           JOIN evidencias_asignadas a ON a.id_asignacion = u.id_asignacion
+                           JOIN evidencias_master em ON em.id_evidencia_master = a.id_evidencia_master
+                           JOIN subgrupos s ON s.id_subgrupo = em.id_subgrupo
+                           JOIN modulos m   ON m.id_modulo = s.id_modulo
+                           JOIN periodos per ON per.id_periodo = a.id_periodo
+                           JOIN contratos c ON c.id_contrato = per.id_contrato
+                           JOIN personas p ON p.id_persona = u.id_persona
+                           {$where}", $params);
+        return (int) ($row['total'] ?? 0);
+    }
+
+    /**
+     * Filtros comunes: última versión por asignación.
+     * Aprobadas: solo las revisadas hoy (fecha de aprobación).
+     * Rechazadas: solo si la versión actual sigue rechazada (corrección subida → deja de contar).
+     */
+    private function revisionEstadoFilters(
+        string $estado,
+        ?int $contratoId,
+        ?int $contratistaId,
+        ?string $modulo,
+        ?int $idCentro,
+        bool $soloHoy
+    ): array {
+        $sql = "WHERE u.estado = :e
                   AND u.id_upload = (
                       SELECT u2.id_upload FROM evidencias_uploads u2
                       WHERE u2.id_asignacion = a.id_asignacion
@@ -49,14 +100,33 @@ final class EvidenceUpload extends Model
                       LIMIT 1
                   )";
         $params = [':e' => $estado];
-        if ($contratoId)   { $sql .= " AND c.id_contrato = :ct"; $params[':ct'] = $contratoId; }
-        if ($contratistaId){ $sql .= " AND p.id_persona = :p";   $params[':p']  = $contratistaId; }
-        if ($modulo)       { $sql .= " AND m.codigo = :mo";       $params[':mo'] = $modulo; }
+
+        if ($soloHoy) {
+            $sql .= " AND EXISTS (
+                        SELECT 1 FROM revisiones r
+                        WHERE r.id_upload = u.id_upload
+                          AND r.accion = 'Aprobada'
+                          AND DATE(r.creado_en) = CURDATE()
+                      )";
+        }
+
+        if ($contratoId) {
+            $sql .= ' AND c.id_contrato = :ct';
+            $params[':ct'] = $contratoId;
+        }
+        if ($contratistaId) {
+            $sql .= ' AND p.id_persona = :p';
+            $params[':p'] = $contratistaId;
+        }
+        if ($modulo) {
+            $sql .= ' AND m.codigo = :mo';
+            $params[':mo'] = $modulo;
+        }
         if ($idCentro !== null && $idCentro > 0) {
             $sql .= ' AND p.id_centro = :id_centro';
             $params[':id_centro'] = $idCentro;
         }
-        $sql .= " ORDER BY u.creado_en DESC";
-        return $this->query($sql, $params);
+
+        return [$sql, $params];
     }
 }

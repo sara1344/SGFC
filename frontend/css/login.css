@@ -2,7 +2,9 @@
    SGFC — Vista de inicio de sesión
    ========================================================================== */
 
-body[data-view="login"] {
+body[data-view="login"],
+body[data-view="olvide-contrasena"],
+body[data-view="restablecer-contrasena"] {
   background: #fff;
 }
 
@@ -44,7 +46,7 @@ body[data-view="login"] {
 .login-panel-left h1 {
   font-size: 28px;
   font-weight: 900;
-  margin-top: 40px;
+  margin-top: 30px;
   line-height: 1.15;
   letter-spacing: -0.5px;
 }
@@ -62,6 +64,14 @@ body[data-view="login"] {
   z-index: 1;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.4);
+  line-height: 1.5;
+}
+
+.login-footer-credits {
+  margin-top: 6px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.32);
+  letter-spacing: 0.3px;
 }
 
 .login-panel-right {
@@ -86,11 +96,136 @@ body[data-view="login"] {
   bottom: 0;
 }
 
+.login-bubbles-canvas--bl {
+  left: 0;
+  bottom: 0;
+}
+
+/* Recuperar contraseña: formulario izquierda, imagen + textos derecha */
+.login-layout--form-left > .login-panel-right {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.login-layout--form-left > .login-panel-left {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+/* Estado inicial de la transición (como login: imagen izq., formulario der.) */
+/* Entrada a recuperar contraseña: arranca como login (imagen izq.) */
+html.login-awaiting-transition .login-layout--form-left > .login-panel-left,
+.login-layout--swap-from-login.login-layout--form-left > .login-panel-left {
+  grid-column: 1;
+}
+
+html.login-awaiting-transition .login-layout--form-left > .login-panel-right,
+.login-layout--swap-from-login.login-layout--form-left > .login-panel-right {
+  grid-column: 2;
+}
+
+/* Vuelta al login: arranca como recuperar (imagen der., formulario izq.) */
+html.login-awaiting-to-login .login-layout:not(.login-layout--form-left) > .login-panel-left,
+.login-layout--swap-from-forgot:not(.login-layout--form-left) > .login-panel-left {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html.login-awaiting-to-login .login-layout:not(.login-layout--form-left) > .login-panel-right,
+.login-layout--swap-from-forgot:not(.login-layout--form-left) > .login-panel-right {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.login-layout--swap-animating > .login-panel-left,
+.login-layout--swap-animating > .login-panel-right {
+  will-change: transform;
+}
+
+.login-layout--swap-animating > .login-panel-left {
+  z-index: 2;
+}
+
+.login-layout--swap-animating > .login-panel-right .login-form-card {
+  opacity: 0.92;
+  transition: opacity 0.35s ease;
+}
+
+/* Mismo degradado y texto a la izquierda del panel (como el login) */
+.login-layout--form-left .login-panel-left::before {
+  background:
+    radial-gradient(ellipse 95% 85% at 0% 0%,
+      #002f4d99 0%,
+      #024a76c3 48%,
+      transparent 68%);
+}
+
 .login-form {
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 400px;
+}
+
+/* Tarjeta blanca semitransparente (recuperar contraseña) */
+.login-form-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 22px 26px 26px;
+  box-shadow: 0 8px 32px rgba(0, 48, 77, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.login-form-card .login-back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+}
+
+.login-form-card h2 {
+  margin-top: 0;
+}
+
+.login-form-card p.sub {
+  margin-bottom: 0;
+}
+
+.login-form-card .alert {
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+
+.login-form-card #forgot-form,
+.login-form-card #login-form,
+.login-form-card #reset-form {
+  margin-top: 16px;
+}
+
+.login-form-card .login-reset-invalid {
+  margin: 14px 0 0;
+  text-align: center;
+}
+
+.login-form-card #reset-form #submit-btn {
+  background: var(--c-azul);
+  color: #fff;
+}
+
+.login-form-card #reset-form #submit-btn:hover:not(:disabled) {
+  background: var(--c-azul-mid);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.login-form-card #reset-form #submit-btn:disabled {
+  background: var(--c-azul);
+  color: #fff;
+  opacity: 0.55;
+}
+
+.login-form-card .login-forgot-wrap {
+  margin-top: 4px;
 }
 
 .login-form h2 {
@@ -106,11 +241,64 @@ body[data-view="login"] {
   margin-top: 4px;
 }
 
-#login-form {
+#login-btn {
+  background: var(--c-azul);
+  color: #fff;
+}
+
+#login-btn:hover:not(:disabled) {
+  background: var(--c-azul-mid);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+#login-btn:disabled {
+  background: var(--c-azul);
+  color: #fff;
+  opacity: 0.55;
+}
+
+#login-form,
+#forgot-form,
+#reset-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
   margin-top: 18px;
+}
+
+/* ¿Olvidaste tu contraseña? — espacio entre correo, reCAPTCHA y botón */
+#forgot-form .login-form-group--correo {
+  margin-bottom: 2px;
+}
+
+#forgot-form #recaptcha-wrap {
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding: 14px 16px 16px;
+  min-height: unset;
+}
+
+#forgot-form #recaptcha-wrap .recaptcha-hint {
+  margin-bottom: 12px;
+}
+
+#forgot-form #submit-btn {
+  margin-top: 10px;
+  background: var(--c-azul);
+  color: #fff;
+}
+
+#forgot-form #submit-btn:hover:not(:disabled) {
+  background: var(--c-azul-mid);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+#forgot-form #submit-btn:disabled {
+  background: var(--c-azul);
+  color: #fff;
+  opacity: 0.55;
 }
 
 .login-user-hint {
@@ -172,6 +360,23 @@ body[data-view="login"] .alert {
   font-size: 13px;
   color: var(--c-verde);
   font-weight: 600;
+}
+
+.login-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--c-verde);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+
+body[data-view="login"] .alert.alert-success {
+  background: var(--c-verde-light, #ecfdf5);
+  border-color: #a7f3d0;
+  color: #047857;
 }
 
 .login-demo-creds {

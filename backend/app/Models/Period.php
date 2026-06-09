@@ -10,7 +10,13 @@ final class Period extends Model
 
     public function listByContract(int $idContrato): array
     {
-        $sql = "SELECT p.* FROM periodos p
+        $sql = "SELECT p.*,
+                       (SELECT COUNT(*) FROM evidencias_asignadas ea WHERE ea.id_periodo = p.id_periodo) AS evidencias_count,
+                       (SELECT COUNT(*) FROM periodo_prorrogas pr
+                         WHERE pr.id_periodo = p.id_periodo AND pr.estado = 'Aprobada'
+                           AND pr.fecha_limite_extendida IS NOT NULL
+                           AND pr.fecha_limite_extendida >= CURDATE()) AS prorroga_activa
+                FROM periodos p
                 WHERE p.id_contrato = :c
                 ORDER BY p.anio ASC, p.mes ASC";
         return $this->query($sql, [':c' => $idContrato]);
@@ -20,14 +26,40 @@ final class Period extends Model
     {
         $mes = (int) date('n');
         $anio = (int) date('Y');
-        $row = $this->one("SELECT * FROM periodos WHERE id_contrato = :c AND mes = :m AND anio = :y LIMIT 1",
-            [':c' => $idContrato, ':m' => $mes, ':y' => $anio]);
+        $row = $this->one(
+            "SELECT p.*,
+                    (SELECT COUNT(*) FROM evidencias_asignadas ea WHERE ea.id_periodo = p.id_periodo) AS evidencias_count
+             FROM periodos p
+             WHERE p.id_contrato = :c AND p.mes = :m AND p.anio = :y
+               AND p.estado NOT IN ('Bloqueado', 'Firmado')
+             LIMIT 1",
+            [':c' => $idContrato, ':m' => $mes, ':y' => $anio]
+        );
         if ($row) {
             return $row;
         }
-        // Fallback: el periodo más reciente NO bloqueado
-        return $this->one("SELECT * FROM periodos WHERE id_contrato = :c AND estado <> 'Bloqueado'
-                           ORDER BY anio DESC, mes DESC LIMIT 1", [':c' => $idContrato]);
+
+        $row = $this->one(
+            "SELECT p.*,
+                    (SELECT COUNT(*) FROM evidencias_asignadas ea WHERE ea.id_periodo = p.id_periodo) AS evidencias_count
+             FROM periodos p
+             WHERE p.id_contrato = :c AND p.estado NOT IN ('Bloqueado', 'Firmado')
+               AND EXISTS (SELECT 1 FROM evidencias_asignadas ea WHERE ea.id_periodo = p.id_periodo)
+             ORDER BY p.anio DESC, p.mes DESC LIMIT 1",
+            [':c' => $idContrato]
+        );
+        if ($row) {
+            return $row;
+        }
+
+        return $this->one(
+            "SELECT p.*,
+                    (SELECT COUNT(*) FROM evidencias_asignadas ea WHERE ea.id_periodo = p.id_periodo) AS evidencias_count
+             FROM periodos p
+             WHERE p.id_contrato = :c AND p.estado NOT IN ('Bloqueado', 'Firmado')
+             ORDER BY p.anio DESC, p.mes DESC LIMIT 1",
+            [':c' => $idContrato]
+        );
     }
 
     public function updateAvance(int $idPeriodo): void

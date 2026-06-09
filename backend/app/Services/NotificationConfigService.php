@@ -22,17 +22,19 @@ final class NotificationConfigService
             'inapp_contractor_rechazada'    => true,
             'inapp_contractor_pdf_firmado'  => true,
             'inapp_contractor_evidencias_asignadas' => true,
+            'inapp_admin_prorroga'                  => true,
+            'inapp_contractor_prorroga'             => true,
             'email_habilitado'              => false,
             'email_admin_evidencia'         => false,
             'email_contractor_rechazo'      => true,
             'email_contractor_aprobacion'   => false,
             'email_contractor_evidencias_asignadas' => false,
             'email_resumen_diario'          => false,
-            'smtp_host'                     => '',
+            'smtp_host'                     => 'smtp.gmail.com',
             'smtp_port'                     => 587,
             'smtp_encryption'               => 'tls',
-            'smtp_user'                     => '',
-            'smtp_from_email'               => '',
+            'smtp_user'                     => 'sgfcsena@gmail.com',
+            'smtp_from_email'               => 'sgfcsena@gmail.com',
             'smtp_from_name'                => 'SGFC — SENA',
         ];
     }
@@ -67,6 +69,8 @@ final class NotificationConfigService
             'contractor_rechazada'    => 'inapp_contractor_rechazada',
             'contractor_pdf_firmado'  => 'inapp_contractor_pdf_firmado',
             'contractor_evidencias_asignadas' => 'inapp_contractor_evidencias_asignadas',
+            'admin_prorroga'                  => 'inapp_admin_prorroga',
+            'contractor_prorroga'             => 'inapp_contractor_prorroga',
         ];
         $field = $map[$eventKey] ?? null;
         return $field ? !empty($cfg[$field]) : true;

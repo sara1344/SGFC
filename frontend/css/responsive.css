@@ -24,7 +24,7 @@
 
   .section-title   { flex-direction: column; }
 
-  .layout-main > main { padding: 14px; }
+  #view-content { padding: 14px; }
   .card-pad { padding: 14px; }
   .modal { padding: 20px; }
 
@@ -49,6 +49,9 @@
 @media (max-width: 900px) {
   .login-layout { grid-template-columns: 1fr !important; }
   .login-panel-left { display: none; }
+  .login-layout--form-left > .login-panel-right {
+    grid-column: 1;
+  }
   .login-bubbles-canvas {
     width: min(75vw, 320px);
     height: min(40vh, 240px);

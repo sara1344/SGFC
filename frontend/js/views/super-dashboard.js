@@ -3,7 +3,7 @@
  */
 import { api } from '../api.js';
 import { $, escapeHtml, fmtDateTime } from '../utils.js';
-import { renderLayout, renderKpi, icon } from '../components.js';
+import { renderLayout, icon } from '../components.js';
 import { fetchAvanceRegionales, renderAvanceRegionalesWidget, bindAvanceRegionalesWidget } from '../dashboard-avance-regionales.js';
 
 const ACCION_LABELS = {
@@ -46,13 +46,10 @@ async function fetchActivityLogs(filters) {
 
 export async function init() {
   const root = await renderLayout({ rootSelector: '#app', activeId: 'super-dashboard', breadcrumb: ['Inicio'] });
-  const [r, avanceRegionales, initialLogs] = await Promise.all([
-    api.get('/dashboard/superadmin'),
+  const [avanceRegionales, initialLogs] = await Promise.all([
     fetchAvanceRegionales().catch(() => []),
     fetchActivityLogs({}).catch(() => []),
   ]);
-  const k = r.data.kpis;
-
   root.innerHTML = `
     <div class="section-title">
       <div>
@@ -61,15 +58,7 @@ export async function init() {
       </div>
       <span style="background:var(--c-morado-light);color:var(--c-morado);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:5px;">${icon('shield',{size:11,color:'currentColor'})}ACCESO TOTAL</span>
     </div>
-    
-    <div class="grid grid-kpis mb-4">
-      ${renderKpi({ label: 'Total usuarios',   value: k.usuarios,      iconName: 'users',         color: '#00304D' })}
-      ${renderKpi({ label: 'Contratos activos',value: k.contratos,     iconName: 'fileText',      color: '#39A900' })}
-      ${renderKpi({ label: 'Total periodos',   value: k.periodos,      iconName: 'fileText',      color: '#71277A' })}
-      ${renderKpi({ label: 'Subgrupos',        value: k.subgrupos,     iconName: 'folder',        color: '#CA8A04' })}
-      ${renderKpi({ label: 'Evidencias master',value: k.evidencias,    iconName: 'clipboard',     color: '#EA580C' })}
-      ${renderKpi({ label: 'PDFs firmados',    value: k.pdfs_firmados, iconName: 'fileSignature', color: '#1D4ED8' })}
-    </div>
+
     <div class="grid grid-2 dashboard-split mb-4">
       <div class="card card-pad dashboard-panel-fill dashboard-scroll-panel activity-panel">
         <h4 style="font-size:14px;font-weight:700;color:var(--c-azul);margin-bottom:12px;">Actividad reciente del sistema</h4>
