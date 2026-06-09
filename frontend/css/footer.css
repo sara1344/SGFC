@@ -50,7 +50,7 @@
 }
 
 .sgfc-footer-photo-img {
-  width: clamp(170px, 20vw, 270px);
+  width: clamp(130px, 13vw, 185px);
   height: auto;
   object-fit: cover;
 }
@@ -128,13 +128,6 @@ html[data-rest-mode="on"] .sgfc-footer-photo-img--warm {
 
 .sgfc-footer-link-icon .icon {
   stroke: #fff;
-}
-
-/* Login: footer a ancho completo bajo el layout */
-body[data-view="login"] .sgfc-footer,
-body[data-view="olvide-contrasena"] .sgfc-footer,
-body[data-view="restablecer-contrasena"] .sgfc-footer {
-  width: 100%;
 }
 
 @media (max-width: 900px) {

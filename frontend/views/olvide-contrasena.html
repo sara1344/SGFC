@@ -122,18 +122,11 @@
             documental de contratistas del SENA.
           </p>
         </div>
-        <div class="login-footer" id="login-footer">
-          <div>SENA — CPIC</div>
-          <div class="login-footer-credits">Sara / Carlos / Nicol</div>
-        </div>
       </div>
     </div>
 
-    <div id="sgfc-footer-mount"></div>
-
     <script type="module">
       import { api } from "../js/api.js";
-      import { renderFooter, initFooter } from "../js/components.js";
       import { initAccessibility } from "../js/accessibility.js";
       import { initLoginBubbles } from "../js/login-bubbles.js";
       import { createLoginRecaptcha } from "../js/login-recaptcha.js";
@@ -147,12 +140,6 @@
 
       initAccessibility();
       initLoginBubbles(document.getElementById("login-panel-right"));
-
-      const $footerMount = document.getElementById("sgfc-footer-mount");
-      if ($footerMount) {
-        $footerMount.outerHTML = renderFooter();
-        initFooter();
-      }
 
       const $err = document.getElementById("error-box");
       const $ok = document.getElementById("success-box");

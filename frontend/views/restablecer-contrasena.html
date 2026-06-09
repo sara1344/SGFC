@@ -125,11 +125,8 @@
       </div>
     </div>
 
-    <div id="sgfc-footer-mount"></div>
-
     <script type="module">
       import { api, resolveFrontendPath } from "../js/api.js";
-      import { renderFooter, initFooter } from "../js/components.js";
       import { initAccessibility } from "../js/accessibility.js";
       import { initLoginBubbles } from "../js/login-bubbles.js";
       import { bindLoginPanelTransitionLinks } from "../js/login-panel-transition.js";
@@ -137,12 +134,6 @@
       bindLoginPanelTransitionLinks();
       initAccessibility();
       initLoginBubbles(document.getElementById("login-panel-right"));
-
-      const $footerMount = document.getElementById("sgfc-footer-mount");
-      if ($footerMount) {
-        $footerMount.outerHTML = renderFooter();
-        initFooter();
-      }
 
       const params = new URLSearchParams(location.search);
       const token = params.get("token")?.trim() || "";

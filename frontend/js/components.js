@@ -149,8 +149,8 @@ export function renderFooter() {
       <div class="sgfc-footer-mesh sgfc-footer-mesh--br" aria-hidden="true"></div>
       <div class="sgfc-footer-inner">
         <div class="sgfc-footer-photo">
-          <img class="sgfc-footer-photo-img sgfc-footer-photo-img--default" src="${photoSrc}" alt="Equipo institucional SENA" loading="lazy" width="270" height="auto">
-          <img class="sgfc-footer-photo-img sgfc-footer-photo-img--warm" src="${photoWarmSrc}" alt="Equipo institucional SENA — modo descanso" loading="lazy" width="270" height="auto">
+          <img class="sgfc-footer-photo-img sgfc-footer-photo-img--default" src="${photoSrc}" alt="Equipo institucional SENA" loading="lazy" width="185" height="auto">
+          <img class="sgfc-footer-photo-img sgfc-footer-photo-img--warm" src="${photoWarmSrc}" alt="Equipo institucional SENA — modo descanso" loading="lazy" width="185" height="auto">
         </div>
         <div class="sgfc-footer-brand">
           <p class="sgfc-footer-tagline">FORMANDO EL FUTURO DE COLOMBIA</p>

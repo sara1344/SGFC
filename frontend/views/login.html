@@ -181,12 +181,10 @@
       </div>
     </div>
 
-    <div id="sgfc-footer-mount"></div>
-
     <script type="module">
       import { api } from "../js/api.js";
       import { setUser, defaultViewForRole } from "../js/auth.js";
-      import { showToast, renderFooter, initFooter } from "../js/components.js";
+      import { showToast } from "../js/components.js";
       import { initAccessibility } from "../js/accessibility.js";
       import { initLoginBubbles } from "../js/login-bubbles.js";
       import {
@@ -199,12 +197,6 @@
 
       initAccessibility();
       initLoginBubbles(document.getElementById("login-panel-right"));
-
-      const $footerMount = document.getElementById("sgfc-footer-mount");
-      if ($footerMount) {
-        $footerMount.outerHTML = renderFooter();
-        initFooter();
-      }
 
       async function applyInstitucionalBranding() {
         const $lead = document.getElementById("login-lead");
