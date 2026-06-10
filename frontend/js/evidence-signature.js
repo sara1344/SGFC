@@ -371,8 +371,8 @@ export async function openEvidenceSignatureModal(uploadId, opts = {}) {
             fileInput.value = '';
             return;
           }
-          if (file.size > 2 * 1024 * 1024) {
-            showToast('error', 'Archivo grande', 'La firma no puede superar 2 MB.');
+          if (file.size > 512 * 1024) {
+            showToast('error', 'Archivo grande', 'La firma no puede superar 500 KB. Use una imagen más pequeña.');
             fileInput.value = '';
             return;
           }
@@ -415,8 +415,7 @@ export async function openEvidenceSignatureModal(uploadId, opts = {}) {
           w_pct: Math.round((boxRect.width / wrapRect.width) * 10000) / 100,
           h_pct: Math.round((boxRect.height / wrapRect.height) * 10000) / 100,
         };
-        const sigForSubmit = imagenB64 || boxImg?.src || '';
-        if (sigForSubmit && sigForSubmit.startsWith('data:image')) body.imagen_b64 = sigForSubmit;
+        if (imagenB64) body.imagen_b64 = imagenB64;
 
         submitBtn.disabled = true;
         try {

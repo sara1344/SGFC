@@ -4,9 +4,9 @@
  *   - Permite ver PDF unificado, adjuntar firma y reenviar al contratista.
  */
 import { api, API_BASE } from '../api.js';
-import { $, $$, escapeHtml, fmtDate, readFileAsDataUrl } from '../utils.js';
-import { renderLayout, renderSectionTitle, icon, openModal, showToast } from '../components.js';
-import { getUser, setUser } from '../auth.js';
+import { $, $$, escapeHtml, fmtDate } from '../utils.js';
+import { renderLayout, renderSectionTitle, icon } from '../components.js';
+import { openUnifiedPdfSignModal } from '../unified-pdf-signature.js';
 
 let tab = 'Pendientes';
 
@@ -64,7 +64,9 @@ function renderPending(rows) {
           <button class="btn" data-sign="${p.id_pdf}">${icon('penLine',{size:14,color:'#fff'})}Firmar</button>
         </div>
       </div>`).join('')}</div>`;
-  $$('#list button[data-sign]').forEach(b => b.addEventListener('click', () => openSignModal(parseInt(b.dataset.sign, 10))));
+  $$('#list button[data-sign]').forEach(b => b.addEventListener('click', () => {
+    openUnifiedPdfSignModal(parseInt(b.dataset.sign, 10), { role: 'Administrativo', onDone: () => load() });
+  }));
 }
 
 function renderSigned(rows) {
@@ -118,97 +120,4 @@ function renderGcZip(rows) {
         </table>
       </div>
     </div>`;
-}
-
-function openSignModal(idPdf) {
-  const user = getUser();
-  const hasSignature = !!user?.tiene_firma;
-
-  openModal({
-    title: 'Firmar documento',
-    html: `
-      <div style="background:var(--c-gris0);border-radius:10px;border:1px solid var(--c-gris2);padding:20px;text-align:center;margin-bottom:14px;">
-        ${icon('fileStack',{size:36,color:'#1D4ED8'})}
-        <div style="font-size:14px;font-weight:700;margin-top:6px;">PDF GF unificado del periodo</div>
-      </div>
-      ${hasSignature ? `
-        <div style="background:var(--c-verde-light);border:1px solid #BBF7D0;border-radius:8px;padding:14px;margin-bottom:18px;">
-          <div style="font-size:13px;font-weight:700;color:var(--c-verde);display:flex;gap:6px;align-items:center;">${icon('checkCircle',{size:14,color:'#39A900'})}Firma registrada</div>
-          <div style="font-size:12px;color:var(--c-gris6);margin-top:4px;">Su firma ya está guardada en el sistema. Se usará automáticamente en este documento.</div>
-        </div>` : `
-        <div style="margin-bottom:14px;">
-          <label class="label">Adjunte su firma (PNG o JPG)</label>
-          <input type="file" class="input" id="sig-file" accept="image/png,image/jpeg,image/jpg">
-          <div style="font-size:11px;color:var(--c-gris5);margin-top:4px;">Solo se solicita la primera vez. Luego se reutilizará en futuras firmas.</div>
-        </div>
-        <div id="sig-preview-wrap" style="display:none;margin-bottom:14px;text-align:center;">
-          <div style="font-size:11px;color:var(--c-gris5);margin-bottom:6px;">Vista previa</div>
-          <img id="sig-preview" alt="Vista previa firma" style="max-height:80px;max-width:100%;border:1px solid var(--c-gris2);border-radius:8px;background:#fff;padding:8px;">
-        </div>`}
-      <div style="background:var(--c-azul-firma-light);border:1px solid #BFDBFE;border-radius:8px;padding:14px;margin-bottom:18px;">
-        <div style="font-size:12px;color:var(--c-gris6);">En el PDF aparecerá: su imagen de firma, cargo y nombre, fecha y hora, y <strong>SGFC SENA</strong>.</div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button class="btn btn-sec" data-close-modal>Cancelar</button>
-        <button class="btn" id="do-sign" ${hasSignature ? '' : 'disabled'}>${icon('penLine',{size:12,color:'#fff'})}Confirmar firma</button>
-      </div>`,
-    onOpen: (modal, close) => {
-      modal.querySelector('[data-close-modal]').addEventListener('click', close);
-      const signBtn = modal.querySelector('#do-sign');
-      let imagenB64 = '';
-
-      if (!hasSignature) {
-        const fileInput = modal.querySelector('#sig-file');
-        const previewWrap = modal.querySelector('#sig-preview-wrap');
-        const preview = modal.querySelector('#sig-preview');
-
-        fileInput.addEventListener('change', async () => {
-          const file = fileInput.files?.[0];
-          imagenB64 = '';
-          signBtn.disabled = true;
-          if (!file) {
-            previewWrap.style.display = 'none';
-            return;
-          }
-          if (!/^image\/(png|jpeg|jpg)$/i.test(file.type) && !/\.(png|jpe?g)$/i.test(file.name)) {
-            showToast('error', 'Archivo inválido', 'Use una imagen PNG o JPG.');
-            fileInput.value = '';
-            previewWrap.style.display = 'none';
-            return;
-          }
-          if (file.size > 2 * 1024 * 1024) {
-            showToast('error', 'Archivo grande', 'La firma no puede superar 2 MB.');
-            fileInput.value = '';
-            previewWrap.style.display = 'none';
-            return;
-          }
-          try {
-            imagenB64 = await readFileAsDataUrl(file);
-            preview.src = imagenB64;
-            previewWrap.style.display = 'block';
-            signBtn.disabled = false;
-          } catch {
-            showToast('error', 'Error', 'No se pudo leer la imagen.');
-          }
-        });
-      }
-
-      signBtn.addEventListener('click', async () => {
-        if (!hasSignature && !imagenB64) return;
-        signBtn.disabled = true;
-        try {
-          const body = { id_pdf: idPdf };
-          if (imagenB64) body.imagen_b64 = imagenB64;
-          await api.post('/pdf/admin-sign', body);
-          if (!hasSignature && user) {
-            setUser({ ...user, tiene_firma: true });
-          }
-          showToast('success', 'Firmado', 'PDF firmado y enviado al contratista.');
-          close(); load();
-        } catch {
-          signBtn.disabled = !hasSignature && !imagenB64;
-        }
-      });
-    },
-  });
 }

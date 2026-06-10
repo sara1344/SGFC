@@ -7,6 +7,8 @@ use App\Middlewares\RlsMiddleware;
 use App\Models\UnifiedPdf;
 use App\Models\User;
 use App\Services\PdfMergeService;
+use App\Services\SignatureImageService;
+use App\Services\UnifiedPdfSignatureService;
 use App\Services\ModulesConfigService;
 use App\Services\NotificationService;
 use App\Services\AuditService;
@@ -69,7 +71,26 @@ final class PdfController extends Controller
         exit;
     }
 
-    /** POST /api/pdf/admin-sign   body:{id_pdf, imagen_b64?} */
+    /** GET /api/pdf/{id}/signature-meta */
+    public function signatureMeta(int $idPdf): void
+    {
+        if (!ModulesConfigService::featureEnabled('firma_pdf')) {
+            $this->error('La firma de PDF está deshabilitada en la configuración del sistema.', 403);
+        }
+        $user = $this->user();
+        $data = $this->input();
+        $rol = trim((string) ($data['rol'] ?? $_GET['rol'] ?? 'Administrativo'));
+        if (!in_array($rol, ['Administrativo', 'Contratista'], true)) {
+            $this->error('Rol de firma inválido.', 422);
+        }
+        if ($rol === 'Administrativo') {
+            RoleMiddleware::requireStaff();
+        }
+
+        $this->success(UnifiedPdfSignatureService::signatureMeta($idPdf, $user, $rol));
+    }
+
+    /** POST /api/pdf/admin-sign   body:{id_pdf, imagen_b64?, pagina, x_pct, y_pct, w_pct, h_pct} */
     public function adminSign(): void
     {
         RoleMiddleware::requireStaff();
@@ -88,6 +109,14 @@ final class PdfController extends Controller
         }
 
         $imagenB64 = $this->resolveSignatureImage($data, (int) $user['id']);
+        $meta = UnifiedPdfSignatureService::signatureMeta($idPdf, $user, 'Administrativo');
+        if (empty($meta['pdf_firmable'])) {
+            $this->error((string) ($meta['pdf_firma_aviso'] ?? 'Este PDF no puede firmarse.'), 422);
+        }
+        $placement = UnifiedPdfSignatureService::parsePlacement($data, (int) $meta['page_count']);
+        if ($placement === null) {
+            $this->error('Debe colocar la firma sobre el documento antes de confirmar.', 422);
+        }
 
         $rel = PdfMergeService::stampSignature(
             $idPdf,
@@ -95,7 +124,8 @@ final class PdfController extends Controller
             'Administrativo',
             (string) ($user['rol_label'] ?? 'Administrativo'),
             (string) ($user['nombre'] ?? 'Administrativo'),
-            $imagenB64
+            $imagenB64,
+            $placement
         );
 
         $m->update($idPdf, ['estado' => 'Enviado a contratista']);
@@ -112,7 +142,7 @@ final class PdfController extends Controller
         $this->success(['ruta' => $rel], 'PDF firmado y reenviado al contratista.');
     }
 
-    /** POST /api/pdf/contractor-sign   body:{id_pdf, imagen_b64?} */
+    /** POST /api/pdf/contractor-sign   body:{id_pdf, imagen_b64?, pagina, x_pct, y_pct, w_pct, h_pct} */
     public function contractorSign(): void
     {
         if (!ModulesConfigService::featureEnabled('firma_pdf')) {
@@ -136,6 +166,14 @@ final class PdfController extends Controller
             $this->error('El PDF aún no fue firmado por el administrativo.', 400);
         }
         $imagenB64 = $this->resolveSignatureImage($data, (int) $user['id']);
+        $meta = UnifiedPdfSignatureService::signatureMeta($idPdf, $user, 'Contratista');
+        if (empty($meta['pdf_firmable'])) {
+            $this->error((string) ($meta['pdf_firma_aviso'] ?? 'Este PDF no puede firmarse.'), 422);
+        }
+        $placement = UnifiedPdfSignatureService::parsePlacement($data, (int) $meta['page_count']);
+        if ($placement === null) {
+            $this->error('Debe colocar la firma sobre el documento antes de confirmar.', 422);
+        }
 
         $rel = PdfMergeService::stampSignature(
             $idPdf,
@@ -143,7 +181,8 @@ final class PdfController extends Controller
             'Contratista',
             (string) ($user['rol_label'] ?? 'Contratista'),
             (string) ($user['nombre'] ?? 'Contratista'),
-            $imagenB64
+            $imagenB64,
+            $placement
         );
         $m->update($idPdf, ['estado' => 'Finalizado']);
 
@@ -178,8 +217,12 @@ final class PdfController extends Controller
         $users = new User();
 
         if ($incoming !== '') {
-            $users->saveSignatureImage($idPersona, $incoming);
-            return $incoming;
+            $normalized = SignatureImageService::normalizeForStorage($incoming);
+            $stored = $users->getSignatureImage($idPersona);
+            if ($stored !== $normalized) {
+                $users->saveSignatureImage($idPersona, $normalized);
+            }
+            return $normalized;
         }
 
         $stored = $users->getSignatureImage($idPersona);

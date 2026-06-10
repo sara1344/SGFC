@@ -42,48 +42,44 @@ export async function init() {
       subtitle: 'Configuración jerárquica: Módulo → Subgrupo → Evidencias',
     })}
     <div class="card list-toolbar mb-3">
-      <div class="list-toolbar-body">
-        <div class="list-toolbar-fields">
-          <div class="filter-field filter-field--grow">
-            <label class="filter-label" for="search">Buscar evidencia</label>
-            <div class="input-wrap input-wrap--search">
-              <span class="input-icon">${icon('search', { size: 15, color: 'currentColor' })}</span>
-              <input class="input" id="search" type="search" autocomplete="off" placeholder="Nombre, código, descripción o subgrupo…">
-            </div>
+      <div class="list-toolbar-fields list-toolbar-fields--evidencias">
+        <div class="filter-field filter-field--grow">
+          <label class="filter-label" for="search">Buscar evidencia</label>
+          <div class="input-wrap input-wrap--search">
+            <span class="input-icon">${icon('search', { size: 15, color: 'currentColor' })}</span>
+            <input class="input" id="search" type="search" autocomplete="off" placeholder="Nombre, código, descripción o subgrupo…">
           </div>
         </div>
-        <div class="list-toolbar-fields">
-          <div class="filter-field filter-field--rol">
-            <label class="filter-label" for="moduloF">Módulo</label>
-            <select class="input" id="moduloF">
-              <option value="">Todos</option>
-              <option value="GF">Gestión Financiera (GF)</option>
-              <option value="GC">Gestión Contractual (GC)</option>
-            </select>
-          </div>
-          <div class="filter-field filter-field--rol">
-            <label class="filter-label" for="formatoF">Formato</label>
-            <select class="input" id="formatoF">
-              <option value="">Todos</option>
-              ${formatoFilterOptionsHtml()}
-            </select>
-          </div>
-          <div class="filter-field filter-field--rol">
-            <label class="filter-label" for="obligatoriaF">Obligatoria</label>
-            <select class="input" id="obligatoriaF">
-              <option value="">Todas</option>
-              <option value="1">Obligatoria</option>
-              <option value="0">Opcional</option>
-            </select>
-          </div>
-          <div class="filter-field filter-field--rol">
-            <label class="filter-label" for="firmaF">Firma</label>
-            <select class="input" id="firmaF">
-              <option value="">Todas</option>
-              <option value="1">Requiere firma</option>
-              <option value="0">Sin firma</option>
-            </select>
-          </div>
+        <div class="filter-field">
+          <label class="filter-label" for="moduloF">Módulo</label>
+          <select class="input" id="moduloF">
+            <option value="">Todos</option>
+            <option value="GF">Gestión Financiera (GF)</option>
+            <option value="GC">Gestión Contractual (GC)</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label class="filter-label" for="formatoF">Formato</label>
+          <select class="input" id="formatoF">
+            <option value="">Todos</option>
+            ${formatoFilterOptionsHtml()}
+          </select>
+        </div>
+        <div class="filter-field">
+          <label class="filter-label" for="obligatoriaF">Obligatoria</label>
+          <select class="input" id="obligatoriaF">
+            <option value="">Todas</option>
+            <option value="1">Obligatoria</option>
+            <option value="0">Opcional</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label class="filter-label" for="firmaF">Firma</label>
+          <select class="input" id="firmaF">
+            <option value="">Todas</option>
+            <option value="1">Requiere firma</option>
+            <option value="0">Sin firma</option>
+          </select>
         </div>
       </div>
       <div class="list-toolbar-meta">

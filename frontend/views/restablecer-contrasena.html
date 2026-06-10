@@ -57,8 +57,11 @@
             <span id="error-msg">Mensaje</span>
           </div>
 
-          <div id="success-box" class="alert alert-success hidden">
-            <span id="success-msg">Mensaje</span>
+          <div id="success-box" class="alert alert-success hidden" role="status" aria-live="polite">
+            <div class="alert__content">
+              <strong class="alert__title" id="success-title">Contraseña actualizada</strong>
+              <p class="alert__text" id="success-msg"></p>
+            </div>
           </div>
 
           <form id="reset-form" class="hidden" autocomplete="off">
@@ -157,7 +160,13 @@
       function showSuccess(msg) {
         $form.classList.add("hidden");
         $err.classList.add("hidden");
-        $okMsg.textContent = msg;
+        const full = msg || "Contraseña actualizada correctamente.";
+        const dot = full.indexOf(". ");
+        const title = dot > 0 ? full.slice(0, dot + 1).replace(/\.$/, "") : "Contraseña actualizada";
+        const body = dot > 0 ? full.slice(dot + 2) : full;
+        const $title = document.getElementById("success-title");
+        if ($title) $title.textContent = title;
+        $okMsg.textContent = body;
         $ok.classList.remove("hidden");
         $hint.textContent = "Redirigiendo al inicio de sesión…";
         setTimeout(() => {

@@ -1,0 +1,10 @@
+/* Manual Administrativo Centro — acento azul institucional */
+:root {
+  --accent: #00304D;
+  --accent-light: #EFF6FF;
+}
+
+.manual-section__num {
+  background: var(--accent-light);
+  color: var(--accent);
+}

@@ -12,7 +12,7 @@ final class PasswordResetService
     private const MAX_REQUESTS_PER_HOUR = 5;
 
     public const GENERIC_OK_MESSAGE =
-        'Si el usuario y el correo coinciden con una cuenta activa, recibirá un enlace para restablecer su contraseña en los próximos minutos.';
+        'Solicitud recibida. Si el usuario y el correo coinciden con una cuenta activa, recibirá un enlace para restablecer su contraseña en los próximos minutos.';
 
     /** @return array{ok:bool,message:string,sent?:bool} */
     public static function requestReset(string $usuario, string $correo): array
@@ -60,9 +60,15 @@ final class PasswordResetService
             $link = self::buildResetLink($plainToken);
             $nombre = trim((string) ($row['nombres'] ?? ''));
             $subject = 'SGFC — Restablecer contraseña';
-            $body = self::buildEmailBody($nombre, $link);
+            $email = EmailTemplateService::passwordReset($nombre, $link);
 
-            $mailResult = MailService::sendTransactional($correo, $subject, $body);
+            $mailResult = MailService::sendTransactional(
+                $correo,
+                $subject,
+                $email['html'],
+                $email['text'],
+                $email['embeds']
+            );
             $sent = $mailResult['ok'];
 
             if ($sent) {
@@ -162,24 +168,5 @@ final class PasswordResetService
             $base .= '/frontend';
         }
         return $base . '/views/restablecer-contrasena.html?token=' . urlencode($plainToken);
-    }
-
-    private static function buildEmailBody(string $nombre, string $link): string
-    {
-        $saludo = $nombre !== '' ? "Hola, {$nombre}." : 'Hola.';
-        return implode("\n", [
-            $saludo,
-            '',
-            'Recibió este mensaje porque solicitó restablecer su contraseña en SGFC (SENA).',
-            '',
-            'Abra el siguiente enlace para definir una nueva contraseña:',
-            $link,
-            '',
-            'El enlace es válido durante 30 minutos y solo puede usarse una vez.',
-            '',
-            'Si usted no solicitó este cambio, ignore este correo.',
-            '',
-            '— SGFC · SENA',
-        ]);
     }
 }

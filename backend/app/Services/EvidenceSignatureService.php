@@ -169,9 +169,11 @@ final class EvidenceSignatureService
     private static function probePdfStampable(string $abs): array
     {
         self::bootPdfLibraries();
+        $working = null;
         try {
+            $working = self::ensureFpdiCompatiblePdf($abs);
             $pdf = new Fpdi();
-            $pages = max(1, $pdf->setSourceFile($abs));
+            $pages = max(1, $pdf->setSourceFile($working));
             return ['stampable' => true, 'page_count' => $pages, 'reason' => null];
         } catch (\Throwable $e) {
             App::logError('EVIDENCE_SIGN_PDF_PROBE', $e->getMessage() . ' | source=' . $abs);
@@ -180,6 +182,8 @@ final class EvidenceSignatureService
                 'page_count' => 1,
                 'reason'     => self::humanizePdfStampError($e->getMessage()),
             ];
+        } finally {
+            self::cleanupTempPdf($working, $abs);
         }
     }
 
@@ -206,10 +210,12 @@ final class EvidenceSignatureService
         float $hPct
     ): void {
         self::bootPdfLibraries();
+        $workingSource = null;
         try {
+            $workingSource = self::ensureFpdiCompatiblePdf($sourceAbs);
             $pdf = new Fpdi();
             $pdf->SetAutoPageBreak(false, 0);
-            $pageCount = $pdf->setSourceFile($sourceAbs);
+            $pageCount = $pdf->setSourceFile($workingSource);
 
             for ($i = 1; $i <= $pageCount; $i++) {
                 $tpl = $pdf->importPage($i);
@@ -236,6 +242,8 @@ final class EvidenceSignatureService
         } catch (\Throwable $e) {
             App::logError('EVIDENCE_SIGN_PDF', $e->getMessage() . ' | source=' . $sourceAbs);
             App::error(self::humanizePdfStampError($e->getMessage()), 422);
+        } finally {
+            self::cleanupTempPdf($workingSource, $sourceAbs);
         }
     }
 
@@ -336,8 +344,12 @@ final class EvidenceSignatureService
         $users = new User();
 
         if ($incoming !== '') {
-            $users->saveSignatureImage($idPersona, $incoming);
-            return $incoming;
+            $normalized = SignatureImageService::normalizeForStorage($incoming);
+            $stored = $users->getSignatureImage($idPersona);
+            if ($stored !== $normalized) {
+                $users->saveSignatureImage($idPersona, $normalized);
+            }
+            return $normalized;
         }
 
         $stored = $users->getSignatureImage($idPersona);
@@ -378,5 +390,92 @@ final class EvidenceSignatureService
     private static function clampPct(float $value, float $min = 0, float $max = 95): float
     {
         return round(max($min, min($max, $value)), 4);
+    }
+
+    private static function ensureFpdiCompatiblePdf(string $sourceAbs): string
+    {
+        self::bootPdfLibraries();
+        try {
+            $probe = new Fpdi();
+            $probe->setSourceFile($sourceAbs);
+            return $sourceAbs;
+        } catch (\Throwable $e) {
+            App::logError('EVIDENCE_SIGN_PDF_NORMALIZE', $e->getMessage() . ' | source=' . $sourceAbs);
+        }
+
+        $tempOut = App::storagePath('temp') . DIRECTORY_SEPARATOR . 'ev_norm_' . uniqid('', true) . '.pdf';
+        if (!self::normalizePdfViaPython($sourceAbs, $tempOut)) {
+            throw new \RuntimeException('No se pudo preparar el PDF para aplicar la firma.');
+        }
+
+        try {
+            $probe = new Fpdi();
+            $probe->setSourceFile($tempOut);
+            return $tempOut;
+        } catch (\Throwable $e) {
+            @unlink($tempOut);
+            throw $e;
+        }
+    }
+
+    private static function normalizePdfViaPython(string $sourceAbs, string $destAbs): bool
+    {
+        $python = self::findPythonExecutable();
+        $script = App::basePath('tools/normalize_pdf.py');
+        if ($python === null || !is_file($script)) {
+            return false;
+        }
+
+        $cmd = [$python, $script, '--output', $destAbs, $sourceAbs];
+        $descriptorSpec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $process = @proc_open($cmd, $descriptorSpec, $pipes);
+        if (!is_resource($process)) {
+            return false;
+        }
+
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]) ?: '';
+        $stderr = stream_get_contents($pipes[2]) ?: '';
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0 || !is_file($destAbs)) {
+            App::logError('EVIDENCE_SIGN_PDF_PYTHON', trim($stderr !== '' ? $stderr : $stdout));
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function cleanupTempPdf(?string $working, string $original): void
+    {
+        if ($working !== null && $working !== $original && is_file($working)) {
+            @unlink($working);
+        }
+    }
+
+    private static function findPythonExecutable(): ?string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached !== '' ? $cached : null;
+        }
+
+        foreach (['python', 'python3', 'py'] as $candidate) {
+            $code = 1;
+            @exec($candidate . ' --version 2>&1', $out, $code);
+            if ($code === 0) {
+                $cached = $candidate;
+                return $candidate;
+            }
+        }
+
+        $cached = '';
+        return null;
     }
 }

@@ -101,10 +101,7 @@ final class PdfMergeService
                 . implode(', ', array_slice($list, 0, 5)) . (count($list) > 5 ? '…' : ''), 400);
         }
 
-        // 4. Cargar librerías PDF (FPDF antes que FPDI)
-        self::bootPdfLibraries();
-
-        // 5. Crear directorio destino
+        // 4. Crear directorio destino
         $base = App::storagePath('pdf_unificados/' . $idContratista);
         if (!is_dir($base) && !@mkdir($base, 0775, true)) {
             App::error('No se pudo crear el directorio de PDFs unificados.', 500);
@@ -113,39 +110,15 @@ final class PdfMergeService
         $absPath  = $base . DIRECTORY_SEPARATOR . $fileName;
         $relPath  = 'pdf_unificados/' . $idContratista . '/' . $fileName;
 
-        // 6. Merge usando FPDI
-        $pdf = new Fpdi();
-        $pdf->SetMargins(0, 0, 0);
-        $pdf->SetAutoPageBreak(false, 0);
-
-        $totalPages = 0;
-
-        foreach ($rows as $r) {
-            $src = App::storagePath($r['ruta']);
-            if (!is_file($src)) {
-                App::logError('PDF_MERGE_FILE_NOT_FOUND', $src);
-                continue;
-            }
-            try {
-                $pageCount = $pdf->setSourceFile($src);
-                for ($i = 1; $i <= $pageCount; $i++) {
-                    $tpl = $pdf->importPage($i);
-                    $size = $pdf->getTemplateSize($tpl);
-                    $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                    $pdf->AddPage($orientation, [$size['width'], $size['height']]);
-                    $pdf->useTemplate($tpl, 0, 0, $size['width'], $size['height']);
-                    $totalPages++;
-                }
-            } catch (\Throwable $e) {
-                App::logError('PDF_MERGE_FAILED', $e->getMessage() . ' | source=' . $src);
-            }
-        }
-
+        // 5. Unir PDFs (pypdf tolera compresión avanzada y cifrado con contraseña vacía)
+        $totalPages = self::mergeEvidenceRows($rows, $absPath);
         if ($totalPages === 0) {
-            App::error('No se pudo procesar ninguna página PDF de las evidencias.', 500);
+            App::error(
+                'No se pudo unificar las evidencias GF. Revise que todos los PDF estén sin contraseña '
+                . 'y reexpórtelos desde Word o con «Imprimir → Guardar como PDF» si el error persiste.',
+                500
+            );
         }
-
-        $pdf->Output($absPath, 'F');
 
         // 7. Registrar en BD (solo primera unificación por periodo)
         $model = new UnifiedPdf();
@@ -185,7 +158,9 @@ final class PdfMergeService
     }
 
     /**
-     * Estampa la firma en una hoja dedicada (nunca sobre el contenido del documento).
+     * Estampa la firma sobre el PDF unificado.
+     *
+     * @param array{pagina:int,x_pct:float,y_pct:float,w_pct:float,h_pct:float}|null $placement
      */
     public static function stampSignature(
         int $idPdf,
@@ -193,7 +168,8 @@ final class PdfMergeService
         string $rolFirma,
         string $cargo,
         string $nombreFirmante,
-        string $imagenB64
+        string $imagenB64,
+        ?array $placement = null
     ): string {
         $model = new UnifiedPdf();
         $row = $model->find($idPdf);
@@ -235,12 +211,15 @@ final class PdfMergeService
         $destRel  = 'pdf_firmados/' . $row['id_persona'] . '/' . $destName;
 
         $stampX = $rolFirma === 'Contratista' ? 95.0 : 15.0;
+        $workingSource = null;
 
         try {
+            $workingSource = self::ensureFpdiCompatiblePdf($sourceAbs);
             $pdf = new Fpdi();
             $pdf->SetAutoPageBreak(false, 0);
-            $pageCount = $pdf->setSourceFile($sourceAbs);
+            $pageCount = $pdf->setSourceFile($workingSource);
             $lastPageSize = null;
+            $targetPage = $placement['pagina'] ?? null;
 
             for ($i = 1; $i <= $pageCount; $i++) {
                 $tpl  = $pdf->importPage($i);
@@ -250,15 +229,15 @@ final class PdfMergeService
                 $pdf->useTemplate($tpl, 0, 0, $size['width'], $size['height']);
                 $lastPageSize = $size;
 
-                // Contratista: la última hoja del PDF admin ya es la de firmas
-                if ($rolFirma === 'Contratista' && $i === $pageCount) {
+                if ($placement !== null && $i === $targetPage) {
+                    self::stampImageAtPlacement($pdf, $imgPath, $size, $placement);
+                } elseif ($placement === null && $rolFirma === 'Contratista' && $i === $pageCount) {
                     $sigY = self::signatureBlockY($size);
                     self::drawSignatureBlock($pdf, $cargo, $nombreFirmante, $imgPath, $stampX, $sigY);
                 }
             }
 
-            // Administrativo: agregar hoja nueva exclusiva para firmas
-            if ($rolFirma === 'Administrativo') {
+            if ($placement === null && $rolFirma === 'Administrativo') {
                 $pageSize = $lastPageSize ?? ['width' => 210.0, 'height' => 297.0];
                 self::appendSignaturePage($pdf, $pageSize, $cargo, $nombreFirmante, $imgPath, $stampX);
             }
@@ -266,6 +245,7 @@ final class PdfMergeService
             $pdf->Output($destAbs, 'F');
         } finally {
             @unlink($imgPath);
+            self::cleanupTempPdf($workingSource, $sourceAbs);
         }
 
         $patch = [];
@@ -294,6 +274,133 @@ final class PdfMergeService
         AuditService::log('pdf_sign_' . strtolower($rolFirma), 'pdfs_unificados', $idPdf);
 
         return $destRel;
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     */
+    private static function mergeEvidenceRows(array $rows, string $absPath): int
+    {
+        $sources = [];
+        foreach ($rows as $r) {
+            $src = App::storagePath((string) $r['ruta']);
+            if (!is_file($src)) {
+                App::logError('PDF_MERGE_FILE_NOT_FOUND', $src);
+                continue;
+            }
+            $sources[] = $src;
+        }
+
+        if ($sources === []) {
+            return 0;
+        }
+
+        $viaPython = self::mergeViaPython($sources, $absPath);
+        if ($viaPython !== null && $viaPython > 0) {
+            return $viaPython;
+        }
+
+        return self::mergeViaFpdi($sources, $absPath);
+    }
+
+    /**
+     * @param list<string> $sources
+     */
+    private static function mergeViaPython(array $sources, string $absPath): ?int
+    {
+        $python = self::findPythonExecutable();
+        $script = App::basePath('tools/merge_pdfs.py');
+        if ($python === null || !is_file($script)) {
+            return null;
+        }
+
+        $cmd = array_merge(
+            [$python, $script, '--output', $absPath],
+            $sources
+        );
+        $descriptorSpec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = @proc_open($cmd, $descriptorSpec, $pipes);
+        if (!is_resource($process)) {
+            return null;
+        }
+
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]) ?: '';
+        $stderr = stream_get_contents($pipes[2]) ?: '';
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        if ($exitCode === 0) {
+            $payload = json_decode(trim($stdout), true);
+            if (is_array($payload) && !empty($payload['ok'])) {
+                return (int) ($payload['paginas'] ?? 0);
+            }
+        }
+
+        App::logError('PDF_MERGE_PYTHON_FAILED', trim($stderr !== '' ? $stderr : $stdout));
+        return null;
+    }
+
+    /**
+     * @param list<string> $sources
+     */
+    private static function mergeViaFpdi(array $sources, ?string $absPath = null): int
+    {
+        self::bootPdfLibraries();
+
+        $pdf = new Fpdi();
+        $pdf->SetMargins(0, 0, 0);
+        $pdf->SetAutoPageBreak(false, 0);
+
+        $totalPages = 0;
+        foreach ($sources as $src) {
+            try {
+                $pageCount = $pdf->setSourceFile($src);
+                for ($i = 1; $i <= $pageCount; $i++) {
+                    $tpl = $pdf->importPage($i);
+                    $size = $pdf->getTemplateSize($tpl);
+                    $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+                    $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+                    $pdf->useTemplate($tpl, 0, 0, $size['width'], $size['height']);
+                    $totalPages++;
+                }
+            } catch (\Throwable $e) {
+                App::logError('PDF_MERGE_FAILED', $e->getMessage() . ' | source=' . $src);
+            }
+        }
+
+        if ($totalPages > 0 && $absPath !== null) {
+            $pdf->Output($absPath, 'F');
+        }
+
+        return $totalPages;
+    }
+
+    private static function findPythonExecutable(): ?string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached !== '' ? $cached : null;
+        }
+
+        foreach (['python', 'python3', 'py'] as $candidate) {
+            $out = [];
+            $code = 1;
+            @exec($candidate . ' --version 2>&1', $out, $code);
+            if ($code === 0) {
+                $cached = $candidate;
+                return $candidate;
+            }
+        }
+
+        $cached = '';
+        return null;
     }
 
     private static function generateDocumentFileName(int $idPersona, array $periodo): string
@@ -333,6 +440,125 @@ final class PdfMergeService
             return 'X';
         }
         return mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8');
+    }
+
+    /** @return array{stampable:bool,page_count:int,reason:?string} */
+    public static function probePdfForSigning(string $abs): array
+    {
+        self::bootPdfLibraries();
+        $working = null;
+        try {
+            $working = self::ensureFpdiCompatiblePdf($abs);
+            $pdf = new Fpdi();
+            $pages = max(1, $pdf->setSourceFile($working));
+            return ['stampable' => true, 'page_count' => $pages, 'reason' => null];
+        } catch (\Throwable $e) {
+            App::logError('PDF_SIGN_PROBE', $e->getMessage() . ' | source=' . $abs);
+            return [
+                'stampable'  => false,
+                'page_count' => 1,
+                'reason'     => self::humanizePdfStampError($e->getMessage()),
+            ];
+        } finally {
+            self::cleanupTempPdf($working, $abs);
+        }
+    }
+
+    /**
+     * @param array{width:float,height:float} $size
+     * @param array{pagina:int,x_pct:float,y_pct:float,w_pct:float,h_pct:float} $placement
+     */
+    private static function stampImageAtPlacement(Fpdi $pdf, string $imgPath, array $size, array $placement): void
+    {
+        $imgW = ($placement['w_pct'] / 100) * $size['width'];
+        $imgH = ($placement['h_pct'] / 100) * $size['height'];
+        $imgX = ($placement['x_pct'] / 100) * $size['width'];
+        $imgY = ($placement['y_pct'] / 100) * $size['height'];
+        try {
+            $pdf->Image($imgPath, $imgX, $imgY, $imgW, $imgH);
+        } catch (\Throwable $e) {
+            App::logError('PDF_SIGN_IMAGE', $e->getMessage());
+            App::error('No se pudo insertar la firma en el PDF.', 500);
+        }
+    }
+
+    private static function humanizePdfStampError(string $raw): string
+    {
+        $msg = strtolower($raw);
+        if (str_contains($msg, 'encrypted')) {
+            return 'Este PDF está protegido o cifrado. Solicite al contratista una copia reexportada sin contraseña.';
+        }
+        if (str_contains($msg, 'compression technique')) {
+            return 'Este PDF usa un formato no compatible. Solicite al contratista que lo reexporte como PDF estándar.';
+        }
+        return 'No se pudo procesar este PDF para aplicar la firma.';
+    }
+
+    private static function ensureFpdiCompatiblePdf(string $sourceAbs): string
+    {
+        self::bootPdfLibraries();
+        try {
+            $probe = new Fpdi();
+            $probe->setSourceFile($sourceAbs);
+            return $sourceAbs;
+        } catch (\Throwable $e) {
+            App::logError('PDF_SIGN_NORMALIZE', $e->getMessage() . ' | source=' . $sourceAbs);
+        }
+
+        $tempOut = App::storagePath('temp') . DIRECTORY_SEPARATOR . 'pdf_norm_' . uniqid('', true) . '.pdf';
+        if (!self::normalizePdfViaPython($sourceAbs, $tempOut)) {
+            throw new \RuntimeException('No se pudo preparar el PDF para aplicar la firma.');
+        }
+
+        try {
+            $probe = new Fpdi();
+            $probe->setSourceFile($tempOut);
+            return $tempOut;
+        } catch (\Throwable $e) {
+            @unlink($tempOut);
+            throw $e;
+        }
+    }
+
+    private static function normalizePdfViaPython(string $sourceAbs, string $destAbs): bool
+    {
+        $python = self::findPythonExecutable();
+        $script = App::basePath('tools/normalize_pdf.py');
+        if ($python === null || !is_file($script)) {
+            return false;
+        }
+
+        $cmd = [$python, $script, '--output', $destAbs, $sourceAbs];
+        $descriptorSpec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $process = @proc_open($cmd, $descriptorSpec, $pipes);
+        if (!is_resource($process)) {
+            return false;
+        }
+
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]) ?: '';
+        $stderr = stream_get_contents($pipes[2]) ?: '';
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0 || !is_file($destAbs)) {
+            App::logError('PDF_SIGN_PYTHON', trim($stderr !== '' ? $stderr : $stdout));
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function cleanupTempPdf(?string $working, string $original): void
+    {
+        if ($working !== null && $working !== $original && is_file($working)) {
+            @unlink($working);
+        }
     }
 
     private static function decodeSignatureImage(string $imagenB64): ?string

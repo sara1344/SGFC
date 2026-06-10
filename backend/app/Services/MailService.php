@@ -87,8 +87,13 @@ final class MailService
     /** Correo transaccional (recuperación de contraseña); no exige notificaciones habilitadas. */
 
     /** @return array{ok:bool,message:string} */
-
-    public static function sendTransactional(string $to, string $subject, string $body): array
+    public static function sendTransactional(
+        string $to,
+        string $subject,
+        string $body,
+        ?string $altBody = null,
+        array $embeddedImages = []
+    ): array
 
     {
 
@@ -104,7 +109,7 @@ final class MailService
 
         }
 
-        $result = self::deliver($to, $subject, $body);
+        $result = self::deliver($to, $subject, $body, $altBody, $embeddedImages);
 
         if (!$result['ok']) {
 
@@ -118,9 +123,16 @@ final class MailService
 
 
 
+    /** @param array<int,array{path:string,cid:string,name?:string}> $embeddedImages */
     /** @return array{ok:bool,message:string} */
 
-    private static function deliver(string $to, string $subject, string $body): array
+    private static function deliver(
+        string $to,
+        string $subject,
+        string $body,
+        ?string $altBody = null,
+        array $embeddedImages = []
+    ): array
 
     {
 
@@ -148,9 +160,26 @@ final class MailService
 
             $mail->Subject = $subject;
 
-            $mail->Body = $body;
+            if ($altBody !== null) {
+                $mail->isHTML(true);
+                $mail->Body = $body;
+                $mail->AltBody = $altBody;
+            } else {
+                $mail->Body = $body;
+            }
 
-
+            foreach ($embeddedImages as $image) {
+                $path = (string) ($image['path'] ?? '');
+                $cid = (string) ($image['cid'] ?? '');
+                if ($path === '' || $cid === '' || !is_readable($path)) {
+                    continue;
+                }
+                $mail->addEmbeddedImage(
+                    $path,
+                    $cid,
+                    (string) ($image['name'] ?? basename($path))
+                );
+            }
 
             $mail->send();
 

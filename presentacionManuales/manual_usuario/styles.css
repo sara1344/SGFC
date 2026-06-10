@@ -1,0 +1,298 @@
+/* SGFC — Portada de Manuales de Usuario */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --c-verde: #39A900;
+  --c-verde-dark: #2D8400;
+  --c-azul: #00304D;
+  --c-azul-mid: #004D7A;
+  --c-morado: #71277A;
+  --c-gris0: #F8FAFC;
+  --c-gris2: #E2E8F0;
+  --c-gris5: #64748B;
+  --c-gris8: #1E293B;
+  --font-sans: 'Work Sans', system-ui, sans-serif;
+  --radius-lg: 12px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-hover: 0 12px 40px rgba(0,48,77,0.14);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--c-gris0);
+  color: var(--c-gris8);
+  min-height: 100vh;
+  line-height: 1.55;
+}
+
+img { max-width: 100%; display: block; }
+
+:focus-visible {
+  outline: 2px solid var(--c-verde);
+  outline-offset: 2px;
+}
+
+.manuales-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.manuales-header {
+  background:
+    url('../../frontend/images/manual.png') center center / cover no-repeat;
+  color: #fff;
+  padding: clamp(2rem, 5vw, 3rem) clamp(1.25rem, 4vw, 2.5rem) clamp(3rem, 6vw, 4rem);
+  position: relative;
+  overflow: hidden;
+}
+
+.manuales-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg,
+      rgba(0, 48, 77, 0.92) 0%,
+      rgba(0, 77, 122, 0.82) 45%,
+      rgba(0, 48, 77, 0.75) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.manuales-header__mesh {
+  position: absolute;
+  width: min(42vw, 360px);
+  height: min(32vw, 260px);
+  pointer-events: none;
+  opacity: 0.18;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='240' viewBox='0 0 320 240'%3E%3Cg fill='none' stroke='%2350E5F9' stroke-width='0.65'%3E%3Cpolygon points='20,30 80,10 140,40 100,90 30,70'/%3E%3Cpolygon points='120,20 200,35 240,80 180,110 110,85'/%3E%3Cpolygon points='40,120 100,100 160,130 130,190 50,170'/%3E%3Cpolygon points='180,130 260,110 300,160 220,200 150,175'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.manuales-header__mesh--tl { top: -20px; left: -10px; }
+.manuales-header__mesh--br { right: -10px; bottom: -20px; transform: rotate(180deg); }
+
+.manuales-header__inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.manuales-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.manuales-header__logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.manuales-header__brand-text {
+  line-height: 1.15;
+  text-align: left;
+}
+
+.manuales-header__brand-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.manuales-header__brand .brand,
+.manuales-header__brand-line .brand {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.manuales-header__brand .tag,
+.manuales-header__brand-line .tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+}
+
+.manuales-header__brand .subtitle,
+.manuales-header__brand-text .subtitle {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.15px;
+}
+
+.manuales-header h1 {
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+  font-weight: 800;
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.5px;
+  animation: fadeUp 0.5s ease both;
+}
+
+.manuales-header p {
+  opacity: 0.92;
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+
+/* ── Main grid ── */
+.manuales-main {
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: -2.25rem auto 0;
+  padding: 0 1.25rem 3rem;
+}
+
+.manuales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.manual-card {
+  background: #fff;
+  border: 1px solid var(--c-gris2);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  animation: fadeUp 0.45s ease both;
+  border-top: 3px solid transparent;
+}
+
+.manual-card--super { border-top-color: var(--c-morado); }
+.manual-card--cont  { border-top-color: var(--c-verde); }
+.manual-card--admin { border-top-color: var(--c-azul); }
+
+.manual-card:nth-child(1) { animation-delay: 0.05s; }
+.manual-card:nth-child(2) { animation-delay: 0.12s; }
+.manual-card:nth-child(3) { animation-delay: 0.19s; }
+
+.manual-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--c-verde);
+}
+
+.manual-card__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.manual-card--super .manual-card__icon {
+  background: rgba(113, 39, 122, 0.1);
+  color: var(--c-morado);
+}
+
+.manual-card--cont .manual-card__icon {
+  background: rgba(57, 169, 0, 0.1);
+  color: var(--c-verde);
+}
+
+.manual-card--admin .manual-card__icon {
+  background: rgba(0, 48, 77, 0.08);
+  color: var(--c-azul);
+}
+
+.manual-card h2 {
+  font-size: 1.15rem;
+  color: var(--c-azul);
+  margin-bottom: 0.45rem;
+}
+
+.manual-card p {
+  font-size: 0.88rem;
+  color: var(--c-gris5);
+  flex: 1;
+  margin-bottom: 1.25rem;
+}
+
+.manual-card .btn {
+  align-self: flex-start;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--c-verde);
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.manual-card .btn:hover {
+  background: var(--c-verde-dark);
+  transform: translateY(-1px);
+}
+
+/* ── Footer ── */
+.manuales-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.78rem;
+  color: var(--c-gris5);
+  border-top: 1px solid var(--c-gris2);
+  background: #fff;
+}
+
+.manuales-footer__logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  opacity: 0.75;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 600px) {
+  .manuales-header { padding-bottom: 2.75rem; }
+  .manuales-main { margin-top: -1.25rem; }
+  .manual-card .btn { width: 100%; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manuales-header h1,
+  .manuales-header p,
+  .manual-card {
+    animation: none;
+  }
+}

@@ -101,6 +101,7 @@ final class Router
         ['GET',    '/api/pdf/pending-admin',         PdfController::class,          'pendingForAdmin', true],
         ['GET',    '/api/pdf/signed',                PdfController::class,          'signed',          true],
         ['GET',    '/api/pdf/mine',                  PdfController::class,          'mine',            true],
+        ['GET',    '/api/pdf/{id}/signature-meta',   PdfController::class,          'signatureMeta',   true],
         ['POST',   '/api/pdf/admin-sign',            PdfController::class,          'adminSign',       true],
         ['POST',   '/api/pdf/contractor-sign',       PdfController::class,          'contractorSign',  true],
         ['GET',    '/api/pdf/unified/{id}',          PdfController::class,          'viewUnified',     true],

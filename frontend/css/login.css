@@ -194,6 +194,75 @@ html.login-awaiting-to-login .login-layout:not(.login-layout--form-left) > .logi
 .login-form-card .alert {
   margin-top: 14px;
   margin-bottom: 0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.login-form-card .alert:not(.alert-success) {
+  background: var(--c-rojo-light);
+  border: 1px solid #FECACA;
+  color: var(--c-rojo);
+  font-weight: 500;
+  align-items: center;
+}
+
+.login-form-card .alert:not(.alert-success) svg {
+  flex-shrink: 0;
+}
+
+.login-form-card .alert-success {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1px solid #86efac;
+  color: #065f46;
+  padding: 16px 18px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.1);
+}
+
+.login-form-card .alert-success .alert__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.login-form-card .alert-success .alert__title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #047857;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.login-form-card .alert-success .alert__text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #065f46;
+  line-height: 1.55;
+}
+
+.login-form-card .alert-success .alert__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(16, 185, 129, 0.22);
+  font-size: 12px;
+  font-weight: 500;
+  color: #047857;
+  line-height: 1.45;
+}
+
+.login-form-card .alert-success .alert__hint svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.85;
 }
 
 .login-form-card #forgot-form,
@@ -338,19 +407,6 @@ html.login-awaiting-to-login .login-layout:not(.login-layout--form-left) > .logi
   font-weight: 600;
 }
 
-body[data-view="login"] .alert {
-  background: var(--c-rojo-light);
-  border: 1px solid #FECACA;
-  border-radius: 8px;
-  padding: 10px 14px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: var(--c-rojo);
-  font-weight: 500;
-}
 
 .login-forgot-wrap {
   text-align: center;
@@ -372,12 +428,6 @@ body[data-view="login"] .alert {
   margin-bottom: 12px;
 }
 
-
-body[data-view="login"] .alert.alert-success {
-  background: var(--c-verde-light, #ecfdf5);
-  border-color: #a7f3d0;
-  color: #047857;
-}
 
 .login-demo-creds {
   margin-top: 24px;
